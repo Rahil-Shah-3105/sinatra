@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   IP spoofing
@@ -14,12 +15,15 @@ module Rack
       default_reaction :deny
 
       def accepts?(env)
+		warn("[DEBUG] >>> Entering accepts?(env=#{env})")
         return true unless env.include? 'HTTP_X_FORWARDED_FOR'
 
         ips = env['HTTP_X_FORWARDED_FOR'].split(',').map(&:strip)
         return false if env.include?('HTTP_CLIENT_IP') && (!ips.include? env['HTTP_CLIENT_IP'])
+		warn("[DEBUG] accepts?(env=#{env}): ips → #{ips}")
         return false if env.include?('HTTP_X_REAL_IP') && (!ips.include? env['HTTP_X_REAL_IP'])
 
+		warn("[DEBUG] <<< Exiting accepts?(env=#{env})")
         true
       end
     end

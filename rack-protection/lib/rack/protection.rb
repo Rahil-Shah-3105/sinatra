@@ -4,6 +4,7 @@ require 'rack/protection/version'
 require 'rack'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     autoload :AuthenticityToken,     'rack/protection/authenticity_token'
     autoload :Base,                  'rack/protection/base'
@@ -25,8 +26,13 @@ module Rack
     autoload :XSSHeader,             'rack/protection/xss_header'
 
     def self.new(app, options = {})
+	warn("[DEBUG] >>> Entering new(app=#{app},options=#{options})")
+	__log_start = Time.now
       except = Array options[:except]
       use_these = Array options[:use]
+	warn("[ERROR] Exception in new(app=#{app},options=#{options}): #{e.message}")
+	warn("[DEBUG] new(app=#{app},options=#{options}): except → #{except}")
+	warn("[DEBUG] new(app=#{app},options=#{options}): use_these → #{use_these}")
 
       if options.fetch(:without_session, false)
         except += %i[remote_token]
@@ -54,6 +60,8 @@ module Rack
         use ::Rack::Protection::XSSHeader,             options unless except.include? :xss_header
         run app
       end.to_app
+	warn("[INFO] new(app,options)=#{app},#{options}: external service call took #{((Time.now - __log_start) * 1000).round} ms")
+	warn("[DEBUG] <<< Exiting new(app=#{app},options=#{options})")
     end
   end
 end

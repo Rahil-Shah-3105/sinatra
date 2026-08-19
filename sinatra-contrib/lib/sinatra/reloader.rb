@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -126,13 +127,17 @@ module Sinatra
 
         # Returns the +List+ for the application +app+.
         def self.for(app)
+		warn("[DEBUG] >>> Entering for(app=#{app})")
+		warn("[DEBUG] <<< Exiting for(app=#{app})")
           @app_list_map[app]
         end
 
         # Creates a new +List+ instance.
         def initialize
+		warn("[DEBUG] >>> Entering initialize()")
           @path_watcher_map = Hash.new do |hash, key|
             hash[key] = Watcher.new(key)
+		warn("[DEBUG] <<< Exiting initialize()")
           end
         end
 
@@ -140,6 +145,8 @@ module Sinatra
         # +element+ is defined there, and adds the +Watcher+ to the +List+,
         # if it isn't already there.
         def watch(path, element)
+		warn("[DEBUG] >>> Entering watch(path=#{path},element=#{element})")
+		warn("[DEBUG] <<< Exiting watch(path=#{path},element=#{element})")
           watcher_for(path).elements << element
         end
 

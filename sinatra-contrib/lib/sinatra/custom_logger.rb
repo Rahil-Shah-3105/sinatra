@@ -49,10 +49,12 @@ module Sinatra
   #
   module CustomLogger
     def logger
+	logger.debug(">>> Entering logger()")
       if settings.respond_to?(:logger)
         settings.logger
       else
         request.logger
+	logger.debug("<<< Exiting logger()")
       end
     end
   end

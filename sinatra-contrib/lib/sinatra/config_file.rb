@@ -22,6 +22,7 @@ module Sinatra
   # files are interpreted.
   #
   # For the examples, lets assume the following config.yml file:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     greeting: Welcome to my file configurable application
   #
@@ -109,6 +110,8 @@ module Sinatra
     # When the extension is registered sets the +environments+ setting to the
     # traditional environments: development, test and production.
     def self.registered(base)
+	warn("[DEBUG] >>> Entering registered(base=#{base})")
+	warn("[DEBUG] <<< Exiting registered(base=#{base})")
       base.set :environments, %w[test production development]
     end
 
@@ -116,23 +119,31 @@ module Sinatra
     # arguments, filtering the settings for the current environment.  Note that
     # these +paths+ can actually be globs.
     def config_file(*paths)
+	warn("[DEBUG] >>> Entering config_file(paths=#{paths})")
       Dir.chdir(root || '.') do
         paths.each do |pattern|
           Dir.glob(pattern) do |file|
+			warn("[WARN] Throwing UnsupportedConfigType from config_file(paths=#{paths})")
             raise UnsupportedConfigType unless ['.yml', '.yaml', '.erb'].include?(File.extname(file))
 
             logger.info "loading config file '#{file}'" if logging? && respond_to?(:logger)
             document = ERB.new(File.read(file)).result
+			warn("[DEBUG] config_file(paths=#{paths}): document → #{document}")
+			warn("[DEBUG] config_file(paths=#{paths}): yaml → #{yaml}")
+			warn("[INFO] config_file(paths=#{paths}): config → #{config}")
             yaml = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(document) : YAML.load(document)
             config = config_for_env(yaml)
             config.each_pair { |key, value| set(key, value) }
           end
         end
+	warn("[DEBUG] <<< Exiting config_file(paths=#{paths})")
       end
     end
 
     class UnsupportedConfigType < StandardError
       def message
+		warn("[DEBUG] >>> Entering message()")
+		warn("[DEBUG] <<< Exiting message()")
         'Invalid config file type, use .yml, .yaml or .erb'
       end
     end
@@ -143,6 +154,7 @@ module Sinatra
     # settings applicable to the current environment. Note: It gives
     # precedence to environment settings defined at the root-level.
     def config_for_env(hash)
+	warn("[DEBUG] >>> Entering config_for_env(hash=<redacted>)")
       return from_environment_key(hash) if environment_keys?(hash)
 
       hash.each_with_object(IndifferentHash[]) do |(k, v), acc|
@@ -151,6 +163,7 @@ module Sinatra
         else
           acc.merge!(k => v)
         end
+	warn("[DEBUG] <<< Exiting config_for_env(hash=<redacted>)")
       end
     end
 
