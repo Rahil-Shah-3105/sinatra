@@ -8,6 +8,7 @@ module Sinatra
   # This extensions provides WebDAV verbs, as defined by RFC 4918
   # (https://tools.ietf.org/html/rfc4918). To use this in your app,
   # just +register+ it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   require 'sinatra/base'
   #   require 'sinatra/webdav'
@@ -32,42 +33,60 @@ module Sinatra
   #
   module WebDAV
     def self.registered(_)
+	warn("[DEBUG] >>> Entering registered(_=#{_})")
+	warn("[DEBUG] <<< Exiting registered(_=#{_})")
       Sinatra::Request.include WebDAV::Request
     end
 
     module Request
       def self.included(base)
+		warn("[DEBUG] >>> Entering included(base=#{base})")
         base.class_eval do
           alias_method :_safe?, :safe?
           alias_method :_idempotent?, :idempotent?
+		warn("[DEBUG] <<< Exiting included(base=#{base})")
 
           def safe?
+			warn("[DEBUG] >>> Entering safe?()")
+			warn("[DEBUG] <<< Exiting safe?()")
             _safe? or propfind?
           end
 
           def idempotent?
+			warn("[DEBUG] >>> Entering idempotent?()")
+			warn("[DEBUG] <<< Exiting idempotent?()")
             _idempotent? or propfind? or move? or unlock? # or lock?
           end
         end
       end
 
       def propfind?
+		warn("[DEBUG] >>> Entering propfind?()")
+		warn("[DEBUG] <<< Exiting propfind?()")
         request_method == 'PROPFIND'
       end
 
       def proppatch?
+		warn("[DEBUG] >>> Entering proppatch?()")
+		warn("[DEBUG] <<< Exiting proppatch?()")
         request_method == 'PROPPATCH'
       end
 
       def mkcol?
+		warn("[DEBUG] >>> Entering mkcol?()")
+		warn("[DEBUG] <<< Exiting mkcol?()")
         request_method == 'MKCOL'
       end
 
       def copy?
+		warn("[DEBUG] >>> Entering copy?()")
+		warn("[DEBUG] <<< Exiting copy?()")
         request_method == 'COPY'
       end
 
       def move?
+		warn("[DEBUG] >>> Entering move?()")
+		warn("[DEBUG] <<< Exiting move?()")
         request_method == 'MOVE'
       end
 
@@ -76,6 +95,8 @@ module Sinatra
       # end
 
       def unlock?
+		warn("[DEBUG] >>> Entering unlock?()")
+		warn("[DEBUG] <<< Exiting unlock?()")
         request_method == 'UNLOCK'
       end
     end

@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -92,7 +93,9 @@ module Sinatra
       def initialize(app)
         @app = app
         @map = {}
+		warn("[DEBUG] >>> Entering initialize(app=#{app})")
         @generic = {}
+		warn("[DEBUG] <<< Exiting initialize(app=#{app})")
         @default = nil
       end
 
@@ -124,8 +127,10 @@ module Sinatra
       end
 
       def method_missing(method, *args, &block)
+		warn("[DEBUG] >>> Entering method_missing(method=#{method},args=#{args},block=#{block})")
         return super if args.any? || block.nil? || !@app.mime_type(method)
 
+		warn("[DEBUG] <<< Exiting method_missing(method=#{method},args=#{args},block=#{block})")
         on(method, &block)
       end
     end
@@ -134,21 +139,28 @@ module Sinatra
       include Sinatra::JSON
 
       def respond_with(template, object = nil, &block)
+		warn("[DEBUG] >>> Entering respond_with(template=#{template},object=#{object},block=#{block})")
         unless Symbol === template
           object = template
           template = nil
         end
         format = Format.new(self)
         format.on '*/*' do |type|
+		warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): format → #{format}")
           exts = settings.ext_map[type]
+		warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): exts → #{exts}")
           exts << :xml if type.end_with? '+xml'
           if template
             args = template_cache.fetch(type, template) { template_for(template, exts) }
+			warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): args → #{args}")
             if args.any?
               locals = { object: object }
+			warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): locals → #{locals}")
               locals.merge! object.to_hash if object.respond_to? :to_hash
 
               renderer = args.first
+			warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): renderer → #{renderer}")
+			warn("[DEBUG] respond_with(template=#{template},object=#{object},block=#{block}): options → #{options}")
               options = args[1..] + [{ locals: locals }]
 
               halt send(renderer, *options)
@@ -164,10 +176,15 @@ module Sinatra
           end
           false
         end
+		warn("[DEBUG] <<< Exiting respond_with(template=#{template},object=#{object},block=#{block})")
         format.finish(&block)
       end
 
       def respond_to(&block)
+		warn("[DEBUG] >>> Entering respond_to(block=#{block})")
+		warn("[DEBUG] <<< Exiting respond_to(block=#{block})")
+		warn("[DEBUG] >>> Entering respond_to(formats=#{formats})")
+		warn("[DEBUG] <<< Exiting respond_to(formats=#{formats})")
         Format.new(self).finish(&block)
       end
 
@@ -206,8 +223,10 @@ module Sinatra
     end
 
     def mime_type(*)
+	warn("[DEBUG] >>> Entering mime_type()")
       result = super
       remap_extensions
+	warn("[DEBUG] <<< Exiting mime_type()")
       result
     end
 
@@ -225,16 +244,20 @@ module Sinatra
     end
 
     def rendering_method(engine)
+	warn("[DEBUG] >>> Entering rendering_method(engine=#{engine})")
       return [engine] if Sinatra::Templates.method_defined? engine
       return [:mab] if engine.to_sym == :markaby
 
+	warn("[DEBUG] <<< Exiting rendering_method(engine=#{engine})")
       %i[render engine]
     end
 
     private
 
     def compile!(verb, path, block, **options)
+	warn("[DEBUG] >>> Entering compile!(verb=#{verb},path=#{path},block=#{block},options=#{options})")
       options[:provides] ||= respond_to if respond_to
+	warn("[DEBUG] <<< Exiting compile!(verb=#{verb},path=#{path},block=#{block},options=#{options})")
       super
     end
 
@@ -248,6 +271,7 @@ module Sinatra
     end
 
     def self.engines
+	warn("[DEBUG] >>> Entering engines()")
       engines = {
         css: %i[sass scss],
         xml: %i[builder nokogiri],
@@ -257,7 +281,10 @@ module Sinatra
           [:mab] - %i[find_template markaby]),
         json: [:yajl]
       }
+	warn("[DEBUG] engines(): engines → #{engines}")
+	warn("[DEBUG] engines(): engines.default → #{engines.default}")
       engines.default = []
+	warn("[DEBUG] <<< Exiting engines()")
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end
 

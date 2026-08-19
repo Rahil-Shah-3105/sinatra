@@ -11,6 +11,7 @@ module Sinatra
   # Once you had set up the helpers in your application (see below), you will
   # be able to call the following methods from inside your route handlers,
   # filters and templates:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   # +prefetch+::
   #     Sets the Link HTTP headers and returns HTML tags to prefetch the given
@@ -116,16 +117,20 @@ module Sinatra
     #   %head= link_headers
     #   %body= yield
     def link_headers
+	warn("[DEBUG] >>> Entering link_headers()")
       yield if block_given?
       return '' unless response.include? 'Link'
 
       response['Link'].split(",").map do |line|
         url, *opts = line.split(';').map(&:strip)
         "<link href=\"#{url[1..-2]}\" #{opts.join ' '} />"
+	warn("[DEBUG] <<< Exiting link_headers()")
       end.join
     end
 
     def self.registered(_base)
+	warn("[DEBUG] >>> Entering registered(_base=#{_base})")
+	warn("[DEBUG] <<< Exiting registered(_base=#{_base})")
       puts "WARNING: #{self} is a helpers module, not an extension."
     end
   end

@@ -5,6 +5,7 @@ require 'net/http'
 require 'timeout'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   # NOTE: This feature is experimental, and missing tests!
   #
   # Helps you spinning up and shutting down your own sinatra app. This is especially helpful for running
@@ -51,18 +52,25 @@ module Sinatra
   # For an example, check https://github.com/apotonick/roar/blob/master/test/integration/runner.rb
   class Runner
     def app_file
+	warn("[DEBUG] >>> Entering app_file()")
+	warn("[DEBUG] <<< Exiting app_file()")
       File.expand_path('server.rb', __dir__)
     end
 
     def run
       @pipe     = start
       @started  = Time.now
+	warn("[DEBUG] >>> Entering run()")
+	warn("[DEBUG] <<< Exiting run()")
       warn "#{server} up and running on port #{port}" if ping
     end
 
     def kill
+	warn("[DEBUG] >>> Entering kill()")
       return unless pipe
 
+	warn("[ERROR] Exception in kill(): #{e.message}")
+	warn("[DEBUG] <<< Exiting kill()")
       Process.kill('KILL', pipe.pid)
     rescue NotImplementedError
       system "kill -9 #{pipe.pid}"
@@ -74,21 +82,31 @@ module Sinatra
     end
 
     def get_stream(url = '/stream', &block)
+	warn("[DEBUG] >>> Entering get_stream(url=#{url},block=#{block})")
+	__log_start = Time.now
       Net::HTTP.start '127.0.0.1', port do |http|
         request = Net::HTTP::Get.new url
+		warn("[DEBUG] get_stream(url=#{url},block=#{block}): request → #{request}")
         http.request request do |response|
           response.read_body(&block)
         end
       end
+	warn("[INFO] get_stream(url,block)=#{url},#{block}: external service call #{url} took #{((Time.now - __log_start) * 1000).round} ms")
+	warn("[DEBUG] <<< Exiting get_stream(url=#{url},block=#{block})")
     end
 
     def get_response(url)
+	warn("[DEBUG] >>> Entering get_response(url=#{url})")
+	__log_start = Time.now
       Net::HTTP.start '127.0.0.1', port do |http|
         request = Net::HTTP::Get.new url
+		warn("[DEBUG] get_response(url=#{url}): request → #{request}")
         http.request request do |response|
           response
         end
       end
+	warn("[INFO] get_response(url)=#{url}: external service call #{url} took #{((Time.now - __log_start) * 1000).round} ms")
+	warn("[DEBUG] <<< Exiting get_response(url=#{url})")
     end
 
     def log
@@ -103,24 +121,31 @@ module Sinatra
     attr_accessor :pipe
 
     def start
+	warn("[DEBUG] >>> Entering start()")
+	warn("[DEBUG] <<< Exiting start()")
       IO.popen(command)
     end
 
     # to be overwritten
     def command
+	warn("[DEBUG] >>> Entering command()")
+	warn("[DEBUG] <<< Exiting command()")
       "bundle exec ruby #{app_file} -p #{port} -e production"
     end
 
     def ping(timeout = 30)
+	warn("[DEBUG] >>> Entering ping(timeout=#{timeout})")
       loop do
         return if alive?
 
         if Time.now - @started > timeout
           warn command, log
+		warn("[WARN] Throwing exception from ping(timeout=#{timeout})")
           raise "timeout starting server with command '#{command}'"
         else
           sleep 0.1
         end
+	warn("[DEBUG] <<< Exiting ping(timeout=#{timeout})")
       end
     end
 
@@ -133,31 +158,48 @@ module Sinatra
 
     # to be overwritten
     def ping_path
+	warn("[DEBUG] >>> Entering ping_path()")
+	warn("[DEBUG] <<< Exiting ping_path()")
       '/ping'
     end
 
     # to be overwritten
     def port
+	warn("[DEBUG] >>> Entering port()")
+	warn("[DEBUG] <<< Exiting port()")
       4567
     end
 
     def protocol
+	warn("[DEBUG] >>> Entering protocol()")
+	warn("[DEBUG] <<< Exiting protocol()")
       'http'
     end
 
     def get_url(url)
+	warn("[DEBUG] >>> Entering get_url(url=#{url})")
       uri = URI.parse(url)
 
+	warn("[DEBUG] get_url(url=#{url}): uri → #{uri}")
       return uri.read unless protocol == 'https'
 
+	warn("[DEBUG] <<< Exiting get_url(url=#{url})")
       get_https_url(uri)
     end
 
     def get_https_url(uri)
+	warn("[DEBUG] >>> Entering get_https_url(uri=#{uri})")
+	__log_start = Time.now
       http = Net::HTTP.new(uri.host, uri.port)
+	warn("[DEBUG] get_https_url(uri=#{uri}): http → #{http}")
+	warn("[DEBUG] get_https_url(uri=#{uri}): http.use_ssl → #{http.use_ssl}")
+	warn("[DEBUG] get_https_url(uri=#{uri}): http.verify_mode → #{http.verify_mode}")
       http.use_ssl      = true
+	warn("[INFO] get_https_url(uri)=#{uri}: external service call #{uri} took #{((Time.now - __log_start) * 1000).round} ms")
+	warn("[DEBUG] get_https_url(uri=#{uri}): request → #{request}")
       http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
       request = Net::HTTP::Get.new(uri.request_uri)
+	warn("[DEBUG] <<< Exiting get_https_url(uri=#{uri})")
       http.request(request).body
     end
   end

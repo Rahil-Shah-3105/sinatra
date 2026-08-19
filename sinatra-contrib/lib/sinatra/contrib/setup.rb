@@ -4,17 +4,24 @@ require 'sinatra/base'
 require 'sinatra/contrib/version'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   module Contrib
     module Loader
       def extensions
+		warn("[DEBUG] >>> Entering extensions()")
+		warn("[DEBUG] <<< Exiting extensions()")
         @extensions ||= { helpers: [], register: [] }
       end
 
       def register(name, path)
+		warn("[DEBUG] >>> Entering register(name=#{name},path=#{path})")
+		warn("[DEBUG] <<< Exiting register(name=#{name},path=#{path})")
         autoload name, path, :register
       end
 
       def helpers(name, path)
+		warn("[DEBUG] >>> Entering helpers(name=#{name},path=#{path})")
+		warn("[DEBUG] <<< Exiting helpers(name=#{name},path=#{path})")
         autoload name, path, :helpers
       end
 

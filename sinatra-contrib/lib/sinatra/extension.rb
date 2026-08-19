@@ -20,6 +20,7 @@ module Sinatra
   # == Usage
   #
   # Just require the mixin and extend your extension with it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require 'sinatra/extension'
   #
@@ -49,8 +50,11 @@ module Sinatra
   # <tt>Sinatra::Base.register</tt>.
   module Extension
     def self.new(&block)
+	warn("[DEBUG] >>> Entering new(block=#{block})")
       ext = Module.new.extend(self)
       ext.class_eval(&block)
+	warn("[DEBUG] new(block=#{block}): ext → #{ext}")
+	warn("[DEBUG] <<< Exiting new(block=#{block})")
       ext
     end
 
@@ -63,6 +67,8 @@ module Sinatra
     end
 
     def registered(base = nil, &block)
+	warn("[DEBUG] >>> Entering registered(base=#{base},block=#{block})")
+	warn("[DEBUG] <<< Exiting registered(base=#{base},block=#{block})")
       base ? replay(base) : record(:class_eval, &block)
     end
 
@@ -77,13 +83,17 @@ module Sinatra
     end
 
     def recorded_methods
+	warn("[DEBUG] >>> Entering recorded_methods()")
+	warn("[DEBUG] <<< Exiting recorded_methods()")
       @recorded_methods ||= []
     end
 
     def method_missing(method, *args, &block)
+	warn("[DEBUG] >>> Entering method_missing(method=#{method},args=#{args},block=#{block})")
       return super unless Sinatra::Base.respond_to? method
 
       record(method, *args, &block)
+	warn("[DEBUG] <<< Exiting method_missing(method=#{method},args=#{args},block=#{block})")
       DontCall.new(method)
     end
 

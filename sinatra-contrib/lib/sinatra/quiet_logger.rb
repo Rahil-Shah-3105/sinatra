@@ -23,6 +23,7 @@ module Sinatra
   # === Modular Application
   #
   # The same for modular application:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require 'sinatra/base'
   #     require 'sinatra/quiet_logger'
@@ -35,9 +36,12 @@ module Sinatra
   #
   module QuietLogger
     def self.registered(app)
+	warn("[DEBUG] >>> Entering registered(app=#{app})")
       quiet_logger_prefixes = begin
         app.settings.quiet_logger_prefixes.join('|')
       rescue StandardError
+		warn("[DEBUG] registered(app=#{app}): quiet_logger_prefixes → #{quiet_logger_prefixes}")
+		warn("[DEBUG] <<< Exiting registered(app=#{app})")
         ''
       end
       return warn('You need to specify the paths you wish to exclude from logging via `set :quiet_logger_prefixes, %w(images css fonts)`') if quiet_logger_prefixes.empty?

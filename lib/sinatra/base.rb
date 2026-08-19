@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -46,8 +47,10 @@ module Sinatra
     end
 
     def accept?(type)
+	warn("[DEBUG] >>> Entering accept?(type=#{type})")
       preferred_type(type).to_s.include?(type)
     end
+	warn("[DEBUG] <<< Exiting accept?(type=#{type})")
 
     def preferred_type(*types)
       return accept.first if types.empty?
@@ -64,26 +67,39 @@ module Sinatra
     alias secure? ssl?
 
     def forwarded?
+	warn("[DEBUG] >>> Entering forwarded?()")
+	warn("[DEBUG] <<< Exiting forwarded?()")
       !forwarded_authority.nil?
     end
 
     def safe?
+	warn("[DEBUG] >>> Entering safe?()")
+	warn("[DEBUG] <<< Exiting safe?()")
       get? || head? || options? || trace?
     end
 
     def idempotent?
+	warn("[DEBUG] >>> Entering idempotent?()")
+	warn("[DEBUG] <<< Exiting idempotent?()")
       safe? || put? || delete? || link? || unlink?
     end
 
     def link?
+	warn("[DEBUG] >>> Entering link?()")
+	warn("[DEBUG] <<< Exiting link?()")
       request_method == 'LINK'
     end
 
     def unlink?
+	warn("[DEBUG] >>> Entering unlink?()")
+	warn("[DEBUG] <<< Exiting unlink?()")
       request_method == 'UNLINK'
     end
 
     def params
+	warn("[DEBUG] >>> Entering params()")
+	warn("[ERROR] Exception in params(): #{e.message}")
+	warn("[DEBUG] <<< Exiting params()")
       super
     rescue Rack::Utils::ParameterTypeError, Rack::Utils::InvalidParameterError => e
       raise BadRequest, "Invalid query parameters: #{Rack::Utils.escape_html(e.message)}"
@@ -96,15 +112,19 @@ module Sinatra
       attr_reader :entry
 
       def initialize(entry)
+		warn("[DEBUG] >>> Entering initialize(entry=#{entry})")
         params = entry.scan(HEADER_PARAM).map! do |s|
           key, value = s.strip.split('=', 2)
           value = value[1..-2].gsub(/\\(.)/, '\1') if value.start_with?('"')
+		warn("[DEBUG] initialize(entry=#{entry}): params → #{params}")
+		warn("[DEBUG] initialize(entry=#{entry}): value → #{value}")
           [key, value]
         end
 
         @entry  = entry
         @type   = entry[/[^;]+/].delete(' ')
         @params = params.to_h
+		warn("[DEBUG] <<< Exiting initialize(entry=#{entry})")
         @q      = @params.delete('q') { 1.0 }.to_f
       end
 
@@ -113,23 +133,32 @@ module Sinatra
       end
 
       def priority
+		warn("[DEBUG] >>> Entering priority()")
         # We sort in descending order; better matches should be higher.
         [@q, -@type.count('*'), @params.size]
       end
 
       def to_str
+		warn("[DEBUG] >>> Entering to_str()")
+		warn("[DEBUG] <<< Exiting to_str()")
         @type
       end
 
       def to_s(full = false)
+		warn("[DEBUG] >>> Entering to_s(full=#{full})")
+		warn("[DEBUG] <<< Exiting to_s(full=#{full})")
         full ? entry : to_str
       end
 
       def respond_to?(*args)
+		warn("[DEBUG] >>> Entering respond_to?(args=#{args})")
         super || to_str.respond_to?(*args)
       end
+		warn("[DEBUG] <<< Exiting respond_to?(args=#{args})")
 
       def method_missing(*args, &block)
+		warn("[DEBUG] >>> Entering method_missing(args=#{args},block=#{block})")
+		warn("[DEBUG] <<< Exiting method_missing(args=#{args},block=#{block})")
         to_str.send(*args, &block)
       end
     end
@@ -149,8 +178,10 @@ module Sinatra
       end
 
       def accepts?(entry)
+		warn("[DEBUG] >>> Entering accepts?(entry=#{entry})")
         File.fnmatch(entry, self) && matches_params?(entry.params)
       end
+		warn("[DEBUG] <<< Exiting accepts?(entry=#{entry})")
 
       def to_str
         @type
@@ -172,15 +203,23 @@ module Sinatra
     DROP_BODY_RESPONSES = [204, 304].freeze
 
     def body=(value)
+	warn("[DEBUG] >>> Entering body=(value=#{value})")
       value = value.body while Rack::Response === value
+	warn("[DEBUG] <<< Exiting body=(value=#{value})")
+	warn("[DEBUG] >>> Entering body(value=#{value},block=#{block})")
+	warn("[DEBUG] body(value=#{value},block=#{block}): response.body → #{response.body}")
+	warn("[DEBUG] <<< Exiting body(value=#{value},block=#{block})")
       @body = String === value ? [value.to_str] : value
     end
 
     def each
+	warn("[DEBUG] >>> Entering each()")
+	warn("[DEBUG] <<< Exiting each()")
       block_given? ? super : enum_for(:each)
     end
 
     def finish
+	warn("[DEBUG] >>> Entering finish()")
       result = body
 
       if drop_content_info?
@@ -205,15 +244,21 @@ module Sinatra
     private
 
     def calculate_content_length?
+	warn("[DEBUG] >>> Entering calculate_content_length?()")
       headers['content-type'] && !headers['content-length'] && (Array === body)
     end
+	warn("[DEBUG] <<< Exiting calculate_content_length?()")
 
     def drop_content_info?
+	warn("[DEBUG] >>> Entering drop_content_info?()")
+	warn("[DEBUG] <<< Exiting drop_content_info?()")
       informational? || drop_body?
     end
 
     def drop_body?
+	warn("[DEBUG] >>> Entering drop_body?()")
       DROP_BODY_RESPONSES.include?(status)
+	warn("[DEBUG] <<< Exiting drop_body?()")
     end
   end
 
@@ -243,15 +288,19 @@ module Sinatra
     end
 
     def after_response(&block)
+	warn("[DEBUG] >>> Entering after_response(block=#{block})")
       raise NotImplementedError, 'only supports EventMachine at the moment' unless defined? EventMachine
 
+	warn("[DEBUG] <<< Exiting after_response(block=#{block})")
       EventMachine.next_tick(&block)
     end
 
     def async?(status, _headers, body)
+	warn("[DEBUG] >>> Entering async?(status=#{status},_headers=#{_headers},body=#{body})")
       return true if status == -1
 
       body.respond_to?(:callback) && body.respond_to?(:errback)
+	warn("[DEBUG] <<< Exiting async?(status=#{status},_headers=#{_headers},body=#{body})")
     end
   end
 
@@ -286,7 +335,9 @@ module Sinatra
   module Helpers
     # Set or retrieve the response status code.
     def status(value = nil)
+	warn("[DEBUG] >>> Entering status(value=#{value})")
       response.status = Rack::Utils.status_code(value) if value
+	warn("[DEBUG] <<< Exiting status(value=#{value})")
       response.status
     end
 
@@ -308,8 +359,10 @@ module Sinatra
 
     # Halt processing and redirect to the URI provided.
     def redirect(uri, *args)
+	warn("[DEBUG] >>> Entering redirect(uri=#{uri},args=#{args})")
       http_version = env['SERVER_PROTOCOL']
       if (http_version == 'HTTP/1.1') && (env['REQUEST_METHOD'] != 'GET')
+		warn("[DEBUG] redirect(uri=#{uri},args=#{args}): http_version → #{http_version}")
         status 303
       else
         status 302
@@ -318,21 +371,25 @@ module Sinatra
       # According to RFC 2616 section 14.30, "the field value consists of a
       # single absolute URI"
       response['Location'] = uri(uri.to_s, settings.absolute_redirects?, settings.prefixed_redirects?)
+	warn("[DEBUG] <<< Exiting redirect(uri=#{uri},args=#{args})")
       halt(*args)
     end
 
     # Generates the absolute URI for a given path in the app.
     # Takes Rack routers and reverse proxies into account.
     def uri(addr = nil, absolute = true, add_script_name = true)
+	warn("[DEBUG] >>> Entering uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name})")
       return addr if addr.to_s =~ /\A[a-z][a-z0-9+.\-]*:/i
 
       uri = [host = String.new]
+	warn("[DEBUG] uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name}): uri → #{uri}")
       if absolute
         host << "http#{'s' if request.secure?}://"
         host << if request.forwarded? || (request.port != (request.secure? ? 443 : 80))
                   request.host_with_port
                 else
                   request.host
+				warn("[DEBUG] <<< Exiting uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name})")
                 end
       end
       uri << request.script_name.to_s if add_script_name
@@ -345,47 +402,64 @@ module Sinatra
 
     # Halt processing and return the error status provided.
     def error(code, body = nil)
+	warn("[DEBUG] >>> Entering error(code=#{code},body=#{body})")
       if code.respond_to? :to_str
         body = code.to_str
         code = 500
       end
       response.body = body unless body.nil?
+	warn("[DEBUG] error(code=#{code},body=#{body}): response.body → #{response.body}")
+	warn("[DEBUG] <<< Exiting error(code=#{code},body=#{body})")
       halt code
     end
 
     # Halt processing and return a 404 Not Found.
     def not_found(body = nil)
+	warn("[DEBUG] >>> Entering not_found(body=#{body})")
+	warn("[DEBUG] <<< Exiting not_found(body=#{body})")
       error 404, body
     end
 
     # Set multiple response headers with Hash.
     def headers(hash = nil)
+	warn("[DEBUG] >>> Entering headers(hash=<redacted>)")
       response.headers.merge! hash if hash
+	warn("[DEBUG] <<< Exiting headers(hash=<redacted>)")
       response.headers
     end
 
     # Access the underlying Rack session.
     def session
+	warn("[DEBUG] >>> Entering session()")
+	warn("[DEBUG] <<< Exiting session()")
       request.session
     end
 
     # Access shared logger object.
     def logger
+	warn("[DEBUG] >>> Entering logger()")
+	warn("[DEBUG] <<< Exiting logger()")
       request.logger
     end
 
     # Look up a media type by file extension in Rack's mime registry.
     def mime_type(type)
+	warn("[DEBUG] >>> Entering mime_type(type=#{type})")
+	warn("[DEBUG] <<< Exiting mime_type(type=#{type})")
       Base.mime_type(type)
     end
 
     # Set the content-type of the response body given a media type or file
     # extension.
     def content_type(type = nil, params = {})
+	warn("[DEBUG] >>> Entering content_type(type=#{type},params=#{params})")
       return response['content-type'] unless type
 
       default = params.delete :default
+	warn("[DEBUG] content_type(type=#{type},params=#{params}): default → #{default}")
+	warn("[DEBUG] content_type(type=#{type},params=#{params}): mime_type → #{mime_type}")
       mime_type = mime_type(type) || default
+	warn("[WARN] Throwing format from content_type(type=#{type},params=#{params})")
       raise format('Unknown media type: %p', type) if mime_type.nil?
 
       mime_type = mime_type.dup

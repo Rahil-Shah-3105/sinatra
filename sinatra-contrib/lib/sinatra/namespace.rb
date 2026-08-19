@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[DEBUG] >>> Entering new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block})")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
@@ -199,8 +201,10 @@ module Sinatra
         @pattern, @conditions = compile(pattern, conditions)
         @templates            = Hash.new { |_h, k| @base.templates[k] }
         namespace = self
+		warn("[DEBUG] new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block}): namespace → #{namespace}")
         before { extend(@namespace = namespace) }
         class_eval(&block)
+	warn("[DEBUG] <<< Exiting new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block})")
       end
     end
 
@@ -214,12 +218,16 @@ module Sinatra
       end
 
       def redirect_to(uri, *args)
+		warn("[DEBUG] >>> Entering redirect_to(uri=#{uri},args=#{args})")
+		warn("[DEBUG] <<< Exiting redirect_to(uri=#{uri},args=#{args})")
         redirect("#{@namespace.pattern}#{uri}", *args)
       end
     end
 
     module SharedMethods
       def namespace(pattern, conditions = {}, &block)
+		warn("[DEBUG] >>> Entering namespace(pattern=#{pattern},conditions=#{conditions},block=#{block})")
+		warn("[DEBUG] <<< Exiting namespace(pattern=#{pattern},conditions=#{conditions},block=#{block})")
         Sinatra::Namespace.new(self, pattern, conditions, &block)
       end
     end
@@ -241,16 +249,20 @@ module Sinatra
       prefixed :before, :after, :delete, :get, :head, :options, :patch, :post, :put
 
       def helpers(*extensions, &block)
+		warn("[DEBUG] >>> Entering helpers(extensions=#{extensions},block=#{block})")
         class_eval(&block) if block_given?
+		warn("[DEBUG] <<< Exiting helpers(extensions=#{extensions},block=#{block})")
         include(*extensions) if extensions.any?
       end
 
       def register(*extensions, &block)
+		warn("[DEBUG] >>> Entering register(extensions=#{extensions},block=#{block})")
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
         extensions.each do |extension|
           extend extension
           extension.registered(self) if extension.respond_to?(:registered)
+		warn("[DEBUG] <<< Exiting register(extensions=#{extensions},block=#{block})")
         end
       end
 
@@ -259,10 +271,14 @@ module Sinatra
       end
 
       def not_found(&block)
+		warn("[DEBUG] >>> Entering not_found(block=#{block})")
+		warn("[DEBUG] <<< Exiting not_found(block=#{block})")
         error(Sinatra::NotFound, &block)
       end
 
       def errors
+		warn("[DEBUG] >>> Entering errors()")
+		warn("[DEBUG] <<< Exiting errors()")
         base.errors.merge(namespace_errors)
       end
 
