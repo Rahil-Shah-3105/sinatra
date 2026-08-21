@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   CSRF
@@ -18,6 +19,8 @@ module Rack
     # Compatible with rack-csrf.
     class FormToken < AuthenticityToken
       def accepts?(env)
+		warn("[DEBUG] >>> Entering accepts?(env=#{env})")
+		warn("[DEBUG] <<< Exiting accepts?(env=#{env})")
         env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest' or super
       end
     end

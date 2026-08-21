@@ -11,6 +11,7 @@ module Sinatra
   # Once you had set up the helpers in your application (see below), you will
   # be able to call the following methods from inside your route handlers,
   # filters and templates:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   # +prefetch+::
   #     Sets the Link HTTP headers and returns HTML tags to prefetch the given
@@ -82,8 +83,14 @@ module Sinatra
     #   link :stylesheet, '/a.css', '/b.css'
     def link(*urls)
       opts          = urls.last.respond_to?(:to_hash) ? urls.pop : {}
+	warn("[DEBUG] >>> Entering link(urls=#{urls})")
       opts[:rel]    = urls.shift unless urls.first.respond_to? :to_str
       options       = opts.map { |k, v| " #{k}=#{v.to_s.inspect}" }
+	warn("[DEBUG] link(urls=#{urls}): options → #{options}")
+	warn("[DEBUG] link(urls=#{urls}): html_pattern → #{html_pattern}")
+	warn("[DEBUG] link(urls=#{urls}): http_pattern → #{http_pattern}")
+	warn("[DEBUG] link(urls=#{urls}): link → #{link}")
+	warn("[DEBUG] link(urls=#{urls}): opts → #{opts}")
       html_pattern  = "<link href=\"%s\"#{options.join} />"
       http_pattern  = ['<%s>', *options].join ';'
       link          = (response['Link'] ||= '')
@@ -94,6 +101,7 @@ module Sinatra
         link << "," unless link.empty?
         link << (http_pattern % url)
         html_pattern % url
+	warn("[DEBUG] <<< Exiting link(urls=#{urls})")
       end.join
     end
 
@@ -121,12 +129,16 @@ module Sinatra
 
       response['Link'].split(",").map do |line|
         url, *opts = line.split(';').map(&:strip)
+		warn("[DEBUG] >>> Entering link_headers()")
+		warn("[DEBUG] <<< Exiting link_headers()")
         "<link href=\"#{url[1..-2]}\" #{opts.join ' '} />"
       end.join
     end
 
     def self.registered(_base)
+	warn("[DEBUG] >>> Entering registered(_base=#{_base})")
       puts "WARNING: #{self} is a helpers module, not an extension."
+	warn("[DEBUG] <<< Exiting registered(_base=#{_base})")
     end
   end
 

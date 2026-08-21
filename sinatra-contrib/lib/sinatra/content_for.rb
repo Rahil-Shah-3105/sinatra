@@ -16,6 +16,7 @@ module Sinatra
   #
   # You call +content_for+, generally from a view, to capture a block of markup
   # giving it an identifier:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     # index.erb
   #     <% content_for :some_key do %>
@@ -146,6 +147,8 @@ module Sinatra
     #       <span>content "head" was defined.</span>
     #     <% end %>
     def content_for?(key)
+	warn("[DEBUG] >>> Entering content_for?(key=#{key})")
+	warn("[DEBUG] <<< Exiting content_for?(key=#{key})")
       content_blocks[key.to_sym].any?
     end
 
@@ -153,6 +156,8 @@ module Sinatra
     #
     #    <% clear_content_for :head %>
     def clear_content_for(key)
+	warn("[DEBUG] >>> Entering clear_content_for(key=#{key})")
+	warn("[DEBUG] <<< Exiting clear_content_for(key=#{key})")
       content_blocks.delete(key.to_sym) if content_for?(key)
     end
 
@@ -178,8 +183,10 @@ module Sinatra
         haml? && Tilt[:haml] == Tilt::HamlTemplate && respond_to?(:capture_haml) ? capture_haml(*args, &block) : yield(*args)
       else
         content = content_blocks[key.to_sym].map { |b| capture(*args, &b) }
+		warn("[DEBUG] >>> Entering yield_content(key=#{key},args=#{args},block=#{block})")
         content.join.tap do |c|
           if block_given? && (erb? || erubi?)
+			warn("[DEBUG] yield_content(key=#{key},args=#{args},block=#{block}): content → #{content}")
             @_out_buf << c
           end
         end

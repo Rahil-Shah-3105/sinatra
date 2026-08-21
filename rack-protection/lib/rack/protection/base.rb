@@ -44,6 +44,8 @@ module Rack
       # Used by subclasses to declare default values for options they require.
       # These defaults are merged onto the DEFAULT_OPTIONS provided by this class.
       def self.default_options(options)
+		warn("[DEBUG] >>> Entering default_options()")
+		warn("[DEBUG] <<< Exiting default_options(options=#{options})")
         define_method(:default_options) { super().merge(options) }
       end
 
@@ -51,6 +53,8 @@ module Rack
       # This replaces the default provided by this class.
       # See #default_reaction.
       def self.default_reaction(reaction)
+		warn("[DEBUG] >>> Entering default_reaction(reaction=#{reaction})")
+		warn("[DEBUG] <<< Exiting default_reaction(reaction=#{reaction})")
         alias_method(:default_reaction, reaction)
       end
 
@@ -59,56 +63,72 @@ module Rack
       end
 
       def initialize(app, options = {})
+		warn("[DEBUG] >>> Entering initialize(app=#{app},options=#{options})")
         @app = app
+		warn("[DEBUG] <<< Exiting initialize(app=#{app},options=#{options})")
         @options = default_options.merge(options)
       end
 
       def safe?(env)
+		warn("[DEBUG] <<< Exiting safe?(env=#{env})")
         %w[GET HEAD OPTIONS TRACE].include? env['REQUEST_METHOD']
       end
 
       def accepts?(env)
+		warn("[DEBUG] >>> Entering accepts?(env=#{env})")
         raise NotImplementedError, "#{self.class} implementation pending"
       end
 
       def call(env)
+		warn("[DEBUG] >>> Entering call(env=#{env})")
         unless accepts? env
           instrument env
           result = react env
         end
+		warn("[DEBUG] <<< Exiting call(env=#{env})")
         result or app.call(env)
       end
 
       def react(env)
+		warn("[DEBUG] >>> Entering react(env=#{env})")
         result = send(options[:reaction], env)
+		warn("[DEBUG] <<< Exiting react(env=#{env})")
         result if (Array === result) && (result.size == 3)
       end
 
       def debug(env, message)
+		warn("[DEBUG] >>> Entering debug(env=#{env},message=#{message})")
         return unless options[:logging]
 
         l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
+		warn("[DEBUG] <<< Exiting debug(env=#{env},message=#{message})")
         l.debug(message)
       end
 
       def warn(env, message)
+		warn("[DEBUG] >>> Entering warn(env=#{env},message=#{message})")
         return unless options[:logging]
 
         l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
+		warn("[DEBUG] <<< Exiting warn(env=#{env},message=#{message})")
         l.warn(message)
       end
 
       def instrument(env)
+		warn("[DEBUG] >>> Entering instrument(env=#{env})")
         return unless (i = options[:instrumenter])
 
         env['rack.protection.attack'] = self.class.name.split('::').last.downcase
+		warn("[DEBUG] <<< Exiting instrument(env=#{env})")
         i.instrument('rack.protection', env)
       end
 
       # Deny the request.  Sends a content type of "text/plain" using
       # the status and message set in the options.
       def deny(env)
+		warn("[DEBUG] >>> Entering deny(env=#{env})")
         warn env, "attack prevented by #{self.class}"
+		warn("[DEBUG] <<< Exiting deny(env=#{env})")
         [options[:status], { 'content-type' => 'text/plain' }, [options[:message]]]
       end
 
@@ -117,12 +137,19 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[DEBUG] >>> Entering report(env=#{env})")
         warn env, "attack reported by #{self.class}"
+		warn("[DEBUG] <<< Exiting report(env=#{env})")
         env[options[:report_key]] = true
       end
 
       def session?(env)
+		warn("[DEBUG] >>> Entering session?(env=#{env})")
         env.include? options[:session_key]
+		warn("[DEBUG] <<< Exiting session?(env=#{env})")
+		warn("[DEBUG] >>> Entering session(env=#{env})")
+		warn("[DEBUG] <<< Exiting session(env=#{env})")
+		warn("[WARN] Throwing exception from session(env=#{env})")
       end
 
       def session(env)
@@ -132,6 +159,7 @@ module Rack
       end
 
       def drop_session(env)
+		warn("[DEBUG] >>> Entering drop_session(env=#{env})")
         return unless session? env
 
         session(env).clear
@@ -142,28 +170,41 @@ module Rack
       end
 
       def referrer(env)
+		warn("[DEBUG] >>> Entering referrer(env=#{env})")
         ref = env['HTTP_REFERER'].to_s
+		warn("[DEBUG] referrer(env=#{env}): ref → #{ref}")
         return if !options[:allow_empty_referrer] && ref.empty?
 
+		warn("[ERROR] Exception in referrer(env=#{env}): #{e.message}")
+		warn("[DEBUG] <<< Exiting referrer(env=#{env})")
         URI.parse(ref).host || Request.new(env).host
       rescue URI::InvalidURIError
       end
 
       def origin(env)
+		warn("[DEBUG] >>> Entering origin(env=#{env})")
+		warn("[DEBUG] <<< Exiting origin(env=#{env})")
         env['HTTP_ORIGIN'] || env['HTTP_X_ORIGIN']
       end
 
       def random_string(secure = defined? SecureRandom)
+		warn("[DEBUG] >>> Entering random_string(secure=#{secure})")
+		warn("[ERROR] Exception in random_string(secure=#{secure}): #{e.message}")
+		warn("[DEBUG] <<< Exiting random_string(secure=#{secure})")
         secure ? SecureRandom.hex(16) : '%032x' % rand((2**128) - 1)
       rescue NotImplementedError
         random_string false
       end
 
       def encrypt(value)
+		warn("[DEBUG] >>> Entering encrypt(value=#{value})")
+		warn("[DEBUG] <<< Exiting encrypt(value=#{value})")
         options[:encryptor].hexdigest value.to_s
       end
 
       def secure_compare(a, b)
+		warn("[DEBUG] >>> Entering secure_compare(a=#{a},b=#{b})")
+		warn("[DEBUG] <<< Exiting secure_compare(a=#{a},b=#{b})")
         Rack::Utils.secure_compare(a.to_s, b.to_s)
       end
 

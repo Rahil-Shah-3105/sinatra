@@ -25,6 +25,7 @@ module Sinatra
   # === Classic Application
   #
   # In a classic application simply require the helpers, and start using them:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/required_params"
@@ -47,12 +48,15 @@ module Sinatra
   #
   module RequiredParams
     def required_params(*keys)
+	warn("[DEBUG] >>> Entering required_params(keys=#{keys})")
+	warn("[DEBUG] <<< Exiting required_params(keys=#{keys})")
       _required_params(params, *keys)
     end
 
     private
 
     def _required_params(p, *keys)
+	warn("[DEBUG] >>> Entering _required_params(p=#{p},keys=#{keys})")
       keys.each do |key|
         if key.is_a?(Hash)
           _required_params(p, *key.keys)
@@ -65,6 +69,7 @@ module Sinatra
           halt 400 unless p.respond_to?(:key?) && p&.key?(key.to_s)
         end
       end
+	warn("[DEBUG] <<< Exiting _required_params(p=#{p},keys=#{keys})")
       true
     end
   end

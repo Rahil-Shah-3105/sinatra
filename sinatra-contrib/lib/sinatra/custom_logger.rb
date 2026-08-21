@@ -50,6 +50,8 @@ module Sinatra
   module CustomLogger
     def logger
       if settings.respond_to?(:logger)
+		logger.debug(">>> Entering logger()")
+		logger.debug("<<< Exiting logger()")
         settings.logger
       else
         request.logger

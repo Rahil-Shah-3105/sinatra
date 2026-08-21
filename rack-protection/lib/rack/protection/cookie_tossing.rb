@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -32,10 +33,14 @@ module Rack
       default_reaction :deny
 
       def call(env)
+		warn("[DEBUG] >>> Entering call(env=#{env})")
         status, headers, body = super
         response = Rack::Response.new(body, status, headers)
         request = Rack::Request.new(env)
         remove_bad_cookies(request, response)
+		warn("[DEBUG] call(env=#{env}): response → #{response}")
+		warn("[DEBUG] call(env=#{env}): request → #{request}")
+		warn("[DEBUG] <<< Exiting call(env=#{env})")
         response.finish
       end
 
