@@ -19,6 +19,7 @@ module Rack
     # == Options
     #
     # [<tt>:permitted_hosts</tt>] an Array of hosts to allow.  Elements can be as follows:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                             [<tt>String</tt> not starting with a dot] a hostname that must be a case-insensitive
     #                                                                       match to allow the request.
     #                             [<tt>String</tt> starting with a dot] allow matches from the entire domain, including
@@ -58,6 +59,7 @@ module Rack
                       message: 'Host not permitted'
 
       def initialize(*)
+		warn("[DEBUG] >>> Entering initialize()")
         super
         @permitted_hosts = []
         @domain_hosts = []
@@ -69,6 +71,7 @@ module Rack
           when String
             if host.start_with?(DOT)
               domain = host[1..-1]
+			warn("[DEBUG] initialize(): domain → #{domain}")
               @permitted_hosts << domain.downcase
               @domain_hosts << /\A#{SUBDOMAINS}#{Regexp.escape(domain)}\z/i
             else

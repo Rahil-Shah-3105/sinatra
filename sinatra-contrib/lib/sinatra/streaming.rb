@@ -29,6 +29,7 @@ module Sinatra
   # Blocks passed to #map! or #map will actually be applied when streaming
   # takes place (as you might have suspected, #map! applies modifications
   # to the current body, while #map creates a new one):
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   class StupidMiddleware
   #     def initialize(app) @app = app end
@@ -109,29 +110,38 @@ module Sinatra
 
       def each
         # that way body.each.map { ... } works
+		warn("[DEBUG] >>> Entering each()")
         return self unless block_given?
 
+		warn("[DEBUG] <<< Exiting each()")
         super
       end
 
       def map(&block)
+		warn("[DEBUG] >>> Entering map(block=#{block})")
         # dup would not copy the mixin
+		warn("[DEBUG] <<< Exiting map(block=#{block})")
         clone.map!(&block)
       end
 
       def map!(&block)
+		warn("[DEBUG] >>> Entering map!(block=#{block})")
         @transformer ||= nil
 
         if @transformer
           inner = @transformer
+		warn("[DEBUG] map!(block=#{block}): inner → #{inner}")
+		warn("[DEBUG] map!(block=#{block}): outer → #{outer}")
           outer = block
           block = proc { |value| outer[inner[value]] }
         end
         @transformer = block
+		warn("[DEBUG] <<< Exiting map!(block=#{block})")
         self
       end
 
       def write(data)
+		warn("[DEBUG] >>> Entering write(data=#{data})")
         self << data
         data.to_s.bytesize
       end
