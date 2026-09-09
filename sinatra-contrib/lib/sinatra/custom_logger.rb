@@ -50,6 +50,7 @@ module Sinatra
   module CustomLogger
     def logger
       if settings.respond_to?(:logger)
+		logger.info("ENTERING: logger() method")
         settings.logger
       else
         request.logger
