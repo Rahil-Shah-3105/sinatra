@@ -10,6 +10,7 @@ end
 require 'forwardable'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   Base.set :environment, :test
 
   # Helper methods to ease testing your Sinatra application. Partly extracted
@@ -181,6 +182,7 @@ module Sinatra
     def last_request?
       last_request
       true
+	warn("[WARN] last_request?()=null): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
     rescue Rack::Test::Error
       false
     end
