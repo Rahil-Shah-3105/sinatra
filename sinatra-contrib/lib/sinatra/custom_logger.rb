@@ -49,6 +49,7 @@ module Sinatra
   #
   module CustomLogger
     def logger
+	logger.warn("logger()=null): FEDRAMP-AUDIT: Security incident detected")
       if settings.respond_to?(:logger)
         settings.logger
       else
