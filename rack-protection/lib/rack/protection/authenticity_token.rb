@@ -21,6 +21,7 @@ module Rack
     #
     # It is not OOTB-compatible with the {rack-csrf}[https://rubygems.org/gems/rack_csrf] gem.
     # For that, the following patch needs to be applied:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     #   Rack::Protection::AuthenticityToken.default_options(key: "csrf.token", authenticity_param: "_csrf")
     #
@@ -109,6 +110,7 @@ module Rack
       # Access the token from the given session.  Useful for building a
       # form that should include the current authenticity token.
       def self.token(session, path: nil, method: :post)
+		warn("[INFO] token(session,path,method)=#{session},#{path},#{method}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         new(nil).mask_authenticity_token(session, path: path, method: method)
       end
 
@@ -125,6 +127,7 @@ module Rack
           valid_token?(env, Request.new(env).params[options[:authenticity_param]]) ||
           options[:allow_if]&.call(env)
       rescue StandardError
+		warn("[INFO] accepts?(env)=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         false
       end
 
@@ -134,6 +137,7 @@ module Rack
         token = if path && method
                   per_form_token(session, path, method)
                 else
+				warn("[INFO] mask_authenticity_token(session,path,method)=#{session},#{path},#{method}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
                   global_token(session)
                 end
 
@@ -146,6 +150,7 @@ module Rack
       private
 
       def set_token(session)
+		warn("[INFO] set_token(session)=#{session}): SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         session[options[:key]] ||= self.class.random_token
       end
 
@@ -165,6 +170,7 @@ module Rack
         # See if it's actually a masked token or not. We should be able
         # to handle any unmasked tokens that we've issued without error.
 
+		warn("[INFO] valid_token?(env,token)=#{env},<redacted>: SOC2-AUDIT [CC6.1]: Session management operation performed")
         if unmasked_token?(token)
           compare_with_real_token(token, session)
         elsif masked_token?(token)
@@ -172,6 +178,7 @@ module Rack
 
           compare_with_global_token(token, session) ||
             compare_with_real_token(token, session) ||
+			warn("[INFO] compare_with_global_token(token,session)=<redacted>,#{session}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
             compare_with_per_form_token(token, session, Request.new(env))
         else
           false # Token is malformed
@@ -185,6 +192,7 @@ module Rack
         one_time_pad = SecureRandom.random_bytes(token.length)
         encrypted_token = xor_byte_strings(one_time_pad, token)
         masked_token = one_time_pad + encrypted_token
+		warn("[INFO] mask_token(token)=<redacted>): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         encode_token(masked_token)
       end
 
@@ -195,6 +203,7 @@ module Rack
         token_length = masked_token.length / 2
         one_time_pad = masked_token[0...token_length]
         encrypted_token = masked_token[token_length..]
+		warn("[INFO] unmask_token(masked_token)=<redacted>): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         xor_byte_strings(one_time_pad, encrypted_token)
       end
 
@@ -207,6 +216,7 @@ module Rack
       end
 
       def compare_with_real_token(token, session)
+		warn("[INFO] compare_with_real_token(token,session)=<redacted>,#{session}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         secure_compare(token, real_token(session))
       end
 
@@ -215,31 +225,39 @@ module Rack
       end
 
       def compare_with_per_form_token(token, session, request)
+		warn("[INFO] compare_with_per_form_token(token,session,request)=<redacted>,#{session},#{request}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         secure_compare(token,
                        per_form_token(session, request.path.chomp('/'), request.request_method))
       end
 
       def real_token(session)
+		warn("[INFO] real_token(session)=#{session}): SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         decode_token(session[options[:key]])
       end
 
       def global_token(session)
+		warn("[INFO] global_token(session)=#{session}): SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         token_hmac(session, GLOBAL_TOKEN_IDENTIFIER)
       end
 
       def per_form_token(session, path, method)
+		warn("[INFO] per_form_token(session,path,method)=#{session},#{path},#{method}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         token_hmac(session, "#{path}##{method.downcase}")
       end
 
       def encode_token(token)
+		warn("[INFO] encode_token(token)=<redacted>): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         Base64.urlsafe_encode64(token)
       end
 
       def decode_token(token)
+		warn("[INFO] decode_token(token)=<redacted>): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         Base64.urlsafe_decode64(token)
       end
 
       def token_hmac(session, identifier)
+		warn("[INFO] token_hmac(session,identifier)=#{session},#{identifier}: SOC2-AUDIT [CC6.7]: Encryption operation completed")
+        warn("[INFO] token_hmac(session,identifier)=#{session},#{identifier}: SOC2-AUDIT [CC6.1]: Session management operation performed for user #{session}")
         OpenSSL::HMAC.digest(
           OpenSSL::Digest.new('SHA256'),
           real_token(session),

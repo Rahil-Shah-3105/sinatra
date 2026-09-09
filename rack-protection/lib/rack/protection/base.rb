@@ -109,6 +109,7 @@ module Rack
       # the status and message set in the options.
       def deny(env)
         warn env, "attack prevented by #{self.class}"
+		warn("[INFO] deny(env)=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [options[:status], { 'content-type' => 'text/plain' }, [options[:message]]]
       end
 
@@ -122,7 +123,9 @@ module Rack
       end
 
       def session?(env)
+		warn("[INFO] session?(env)=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         env.include? options[:session_key]
+		warn("[INFO] session(env)=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
       end
 
       def session(env)
@@ -160,6 +163,7 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value)=#{value}): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 

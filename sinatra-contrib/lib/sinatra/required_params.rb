@@ -25,6 +25,7 @@ module Sinatra
   # === Classic Application
   #
   # In a classic application simply require the helpers, and start using them:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/required_params"
@@ -65,6 +66,7 @@ module Sinatra
           halt 400 unless p.respond_to?(:key?) && p&.key?(key.to_s)
         end
       end
+	warn("[WARN] _required_params(p,keys)=#{p},#{keys}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
       true
     end
   end

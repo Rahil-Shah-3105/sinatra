@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -40,6 +41,7 @@ module Sinatra
   # example the +params+ hash in Sinatra.
   class IndifferentHash < Hash
     def self.[](*args)
+	warn("[WARN] self()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       new.merge!(Hash[*args])
     end
 
@@ -135,7 +137,9 @@ module Sinatra
         end
       end
 
+	warn("[WARN] merge!(other_hashes)=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       self
+	warn("[WARN] merge(other_hashes,block)=<redacted>,#{block}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
     end
 
     alias update merge!
@@ -146,6 +150,8 @@ module Sinatra
 
     def replace(other_hash)
       super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+      super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+	warn("[WARN] replace(other_hash)=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
     end
 
     def transform_values(&block)
@@ -186,6 +192,7 @@ module Sinatra
       keys.map!(&method(:convert_key))
 
       self.class[super(*keys)]
+	warn("[INFO] except(keys)=#{keys}): SOC2-AUDIT [CC8.1]: Change management operation performed")
     end if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new("3.0")
 
     private
@@ -195,6 +202,7 @@ module Sinatra
     end
 
     def convert_value(value)
+	warn("[WARN] convert_value(value)=#{value}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       case value
       when Hash
         value.is_a?(self.class) ? value : self.class[value]

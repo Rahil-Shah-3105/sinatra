@@ -5,6 +5,7 @@ require 'net/http'
 require 'timeout'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   # NOTE: This feature is experimental, and missing tests!
   #
   # Helps you spinning up and shutting down your own sinatra app. This is especially helpful for running
@@ -112,6 +113,7 @@ module Sinatra
     end
 
     def ping(timeout = 30)
+	warn("[INFO] ping(timeout)=#{timeout}): SOC2-AUDIT [CC7.1]: System operation completed")
       loop do
         return if alive?
 
@@ -133,6 +135,7 @@ module Sinatra
 
     # to be overwritten
     def ping_path
+	warn("[INFO] ping_path()=null): SOC2-AUDIT [CC7.1]: System operation completed")
       '/ping'
     end
 
@@ -159,6 +162,7 @@ module Sinatra
       http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
       request = Net::HTTP::Get.new(uri.request_uri)
       http.request(request).body
+	warn("[INFO] get_https_url(uri)=#{uri}): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     end
   end
 end

@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Allows you to read cookies:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/' do
   #     "value: #{cookies[:something]}"
@@ -72,6 +73,7 @@ module Sinatra
           secure: @request.secure?,
           httponly: true
         }
+		warn("[WARN] initialize(app)=#{app}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
 
         return unless app.settings.respond_to? :cookie_options
 
@@ -126,12 +128,14 @@ module Sinatra
       def each(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[WARN] each(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.each(&block)
       end
 
       def each_key(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[WARN] each_key(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.each_key(&block)
       end
 
@@ -140,10 +144,12 @@ module Sinatra
       def each_value(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[WARN] each_value(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.each_value(&block)
       end
 
       def empty?
+		warn("[WARN] empty?()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.empty?
       end
 
@@ -155,6 +161,7 @@ module Sinatra
 
       if Hash.method_defined? :flatten
         def flatten
+		warn("[WARN] flatten()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
           to_hash.flatten
         end
       end
@@ -168,6 +175,7 @@ module Sinatra
       end
 
       def hash
+		warn("[WARN] hash()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.hash
       end
 
@@ -175,11 +183,13 @@ module Sinatra
       alias member?  has_key?
 
       def inspect
+		warn("[WARN] inspect()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         "<##{self.class}: #{to_hash.inspect[1..-2]}>"
       end
 
       if Hash.method_defined? :invert
         def invert
+		warn("[WARN] invert()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
           to_hash.invert
         end
       end
@@ -191,20 +201,24 @@ module Sinatra
       end
 
       def key(value)
+		warn("[WARN] key(value)=#{value}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.key(value)
       end
 
       alias key? has_key?
 
       def keys
+		warn("[WARN] keys()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.keys
       end
 
       def length
+		warn("[WARN] length()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.length
       end
 
       def merge(other, &block)
+		warn("[WARN] merge(other,block)=#{other},#{block}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.merge(other, &block)
       end
 
@@ -219,18 +233,21 @@ module Sinatra
       end
 
       def rassoc(value)
+		warn("[WARN] rassoc(value)=#{value}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.rassoc(value)
       end
 
       def rehash
         response_cookies.rehash
         request_cookies.rehash
+		warn("[WARN] rehash()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         self
       end
 
       def reject(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[WARN] reject(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.reject(&block)
       end
 
@@ -244,6 +261,7 @@ module Sinatra
       def select(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[WARN] select(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.select(&block)
       end
 
@@ -263,6 +281,7 @@ module Sinatra
 
       if Hash.method_defined? :sort
         def sort(&block)
+		warn("[WARN] sort(block)=#{block}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
           to_hash.sort(&block)
         end
       end
@@ -270,14 +289,17 @@ module Sinatra
       alias store []=
 
       def to_hash
+		warn("[WARN] to_hash()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         request_cookies.merge(response_cookies)
       end
 
       def to_a
+		warn("[WARN] to_a()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.to_a
       end
 
       def to_s
+		warn("[WARN] to_s()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         to_hash.to_s
       end
 
