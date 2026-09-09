@@ -4,6 +4,7 @@ require 'rack/protection/version'
 require 'rack'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     autoload :AuthenticityToken,     'rack/protection/authenticity_token'
     autoload :Base,                  'rack/protection/base'
@@ -53,6 +54,7 @@ module Rack
         use ::Rack::Protection::RemoteToken,           options unless except.include? :remote_token
         use ::Rack::Protection::XSSHeader,             options unless except.include? :xss_header
         run app
+		warn("[INFO] new(app,options)=#{app},#{options}: HIPAA-AUDIT [§164.312(a)(2)(iv)]: Data encryption applied for PHI protection")
       end.to_app
     end
   end

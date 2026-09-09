@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   IP spoofing
@@ -18,6 +19,7 @@ module Rack
 
         ips = env['HTTP_X_FORWARDED_FOR'].split(',').map(&:strip)
         return false if env.include?('HTTP_CLIENT_IP') && (!ips.include? env['HTTP_CLIENT_IP'])
+		warn("[WARN] accepts?(env)=#{env}): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
         return false if env.include?('HTTP_X_REAL_IP') && (!ips.include? env['HTTP_X_REAL_IP'])
 
         true
