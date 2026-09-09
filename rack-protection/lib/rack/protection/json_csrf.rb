@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   CSRF
@@ -27,6 +28,7 @@ module Rack
         request               = Request.new(env)
         status, headers, body = app.call(env)
 
+		warn("[INFO] call(env)=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         if has_vector?(request, headers)
           warn env, "attack prevented by #{self.class}"
 
