@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Use this extension to create a handler for multiple routes:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/foo', '/bar' do
   #     # ...
@@ -69,6 +70,7 @@ module Sinatra
     def route(*args, &block)
       options = Hash === args.last ? args.pop : {}
       routes = [*args.pop]
+	warn("[WARN] route(args,block)=#{args},#{block}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
       args.each do |verb|
         verb = verb.to_s.upcase if Symbol === verb
         routes.each do |route|

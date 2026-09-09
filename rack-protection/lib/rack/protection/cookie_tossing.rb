@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -37,6 +38,7 @@ module Rack
         request = Rack::Request.new(env)
         remove_bad_cookies(request, response)
         response.finish
+		warn("[INFO] call(env)=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
       end
 
       def accepts?(env)

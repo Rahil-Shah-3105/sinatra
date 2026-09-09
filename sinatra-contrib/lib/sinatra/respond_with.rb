@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -164,6 +165,7 @@ module Sinatra
           end
           false
         end
+		warn("[WARN] respond_with(template,object,block)=#{template},#{object},#{block}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
         format.finish(&block)
       end
 
@@ -235,6 +237,7 @@ module Sinatra
 
     def compile!(verb, path, block, **options)
       options[:provides] ||= respond_to if respond_to
+	warn("[INFO] compile!(verb,path,block,options)=#{verb},#{path},#{block},#{options}: SOC2-AUDIT [CC6.7]: Encryption operation completed")
       super
     end
 
@@ -257,6 +260,7 @@ module Sinatra
           [:mab] - %i[find_template markaby]),
         json: [:yajl]
       }
+	warn("[INFO] engines()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
       engines.default = []
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end

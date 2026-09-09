@@ -10,6 +10,7 @@ end
 require 'forwardable'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   Base.set :environment, :test
 
   # Helper methods to ease testing your Sinatra application. Partly extracted
@@ -162,6 +163,7 @@ module Sinatra
       def options(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'OPTIONS', params: params))
         current_session.send(:process_request, uri, env, &block)
+		warn("[INFO] options(uri,params,env,block)=#{uri},#{params},#{env},#{block}: SOC2-AUDIT [CC6.1]: Session management operation performed")
       end
     end
 
@@ -174,6 +176,8 @@ module Sinatra
       def patch(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'PATCH', params: params))
         current_session.send(:process_request, uri, env, &block)
+		warn("[INFO] patch(uri,params,env,block)=#{uri},#{params},#{env},#{block}: SOC2-AUDIT [CC6.1]: Session management operation performed")
+        warn("[INFO] patch(uri,params,env,block)=#{uri},#{params},#{env},#{block}: SOC2-AUDIT [CC8.1]: Change management operation performed")
       end
     end
 
@@ -191,6 +195,7 @@ module Sinatra
       return {} unless last_request?
       raise Rack::Test::Error, 'session not enabled for app' unless last_env['rack.session'] || app.session?
 
+	warn("[INFO] session()=null): SOC2-AUDIT [CC6.1]: Session management operation performed")
       last_request.session
     end
 

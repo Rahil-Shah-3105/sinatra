@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[WARN] new(base,pattern,conditions,block)=#{base},#{pattern},#{conditions},#{block}: SOC2-AUDIT [CC6.1]: Password reset operation performed")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil

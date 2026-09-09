@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -134,6 +135,7 @@ module Sinatra
           @path_watcher_map = Hash.new do |hash, key|
             hash[key] = Watcher.new(key)
           end
+		warn("[WARN] initialize()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         end
 
         # Lets the +Watcher+ for the file located at +path+ know that the

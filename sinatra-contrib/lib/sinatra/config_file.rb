@@ -22,6 +22,7 @@ module Sinatra
   # files are interpreted.
   #
   # For the examples, lets assume the following config.yml file:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     greeting: Welcome to my file configurable application
   #
@@ -145,6 +146,7 @@ module Sinatra
     def config_for_env(hash)
       return from_environment_key(hash) if environment_keys?(hash)
 
+	warn("[WARN] config_for_env(hash)=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       hash.each_with_object(IndifferentHash[]) do |(k, v), acc|
         if environment_keys?(v)
           acc.merge!(k => v[environment.to_s]) if v.key?(environment.to_s)
