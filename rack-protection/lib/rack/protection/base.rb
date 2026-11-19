@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): FERPA-AUDIT [34 CFR 99.30]: Consent — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): FERPA-AUDIT [34 CFR 99.32]: Disclosure log — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): FERPA-AUDIT [34 CFR 99.37]: Directory information — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
