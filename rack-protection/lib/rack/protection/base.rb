@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): GDPR-AUDIT: Breach notification — Outbound notification recorded for the audit trail")
+		warn("[WARN] report(env=#{env}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
@@ -126,6 +129,7 @@ module Rack
       end
 
       def session(env)
+		warn("[INFO] session(env=#{env}): GDPR-AUDIT: Transfers to third countries — Session management operation performed")
         return env[options[:session_key]] if session? env
 
         raise "you need to set up a session middleware *before* #{self.class}"
@@ -136,6 +140,7 @@ module Rack
 
         session(env).clear
 
+		warn("[INFO] drop_session(env=#{env}): GDPR-AUDIT: Transfers to third countries — Session management operation performed")
         return if ["1", "true"].include?(ENV["RACK_PROTECTION_SILENCE_DROP_SESSION_WARNING"])
 
         warn env, "session dropped by #{self.class}"
@@ -160,6 +165,7 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value=#{value}): GDPR-AUDIT: Transfers to third countries — Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 

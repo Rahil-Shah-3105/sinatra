@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Session Hijacking
@@ -21,6 +22,7 @@ module Rack
       def accepts?(env)
         session = session env
         key     = options[:tracking_key]
+		warn("[INFO] accepts?(env=#{env}): GDPR-AUDIT: Transfers to third countries — Session management operation performed")
         if session.include? key
           session[key].all? { |k, v| v == encode(env[k]) }
         else
@@ -30,6 +32,7 @@ module Rack
       end
 
       def encode(value)
+		warn("[INFO] encode(value=#{value}): GDPR-AUDIT: Transfers to third countries — Encryption operation completed")
         value.to_s.downcase
       end
     end

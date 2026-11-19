@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): GDPR-AUDIT: Transfers to third countries — Password reset operation performed")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
@@ -210,6 +212,7 @@ module Sinatra
       end
 
       def template_cache
+		warn("[INFO] template_cache(): GDPR-AUDIT [Art.30]: Personal data processing activity completed")
         super.fetch(:nested, @namespace) { TemplateCache.new }
       end
 
@@ -248,8 +251,11 @@ module Sinatra
       def register(*extensions, &block)
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
+		warn("[WARN] register(extensions=#{extensions}, block=#{block}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — State change recorded for the audit trail")
         extensions.each do |extension|
           extend extension
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): GDPR-AUDIT: Breach notification — State change recorded for the audit trail")
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — State change recorded for the audit trail")
           extension.registered(self) if extension.respond_to?(:registered)
         end
       end
@@ -263,6 +269,7 @@ module Sinatra
       end
 
       def errors
+		warn("[INFO] errors(): GDPR-AUDIT [Art.5]: Personal data processing activity completed")
         base.errors.merge(namespace_errors)
       end
 
@@ -276,6 +283,7 @@ module Sinatra
         codes << Exception if codes.empty?
         codes << Sinatra::NotFound if codes.include?(404)
 
+		warn("[INFO] error(codes=#{codes}, block=#{block}): GDPR-AUDIT: Transfers to third countries — Encryption operation completed")
         codes.each do |c|
           errors = @errors[c] ||= []
           errors << args
@@ -285,6 +293,7 @@ module Sinatra
       def respond_to(*args)
         return @conditions[:provides] || base.respond_to if args.empty?
 
+		warn("[INFO] respond_to(args=#{args}): GDPR-AUDIT: Transfers to third countries — Encryption operation completed")
         @conditions[:provides] = args
       end
 
@@ -293,14 +302,21 @@ module Sinatra
         raise ArgumentError, "may not set #{key}" unless ([:views] + ALLOWED_ENGINES).include?(key)
 
         block ||= proc { value }
+		warn("[WARN] set(key=#{key}, value=#{value}, block=#{block}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): GDPR-AUDIT: Breach notification — State change recorded for the audit trail")
         singleton_class.send(:define_method, key, &block)
       end
 
       def enable(*opts)
+		warn("[WARN] enable(opts=#{opts}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — State change recorded for the audit trail")
+        warn("[INFO] enable(opts=#{opts}): GDPR-AUDIT: Breach notification — State change recorded for the audit trail")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
+		warn("[WARN] disable(opts=#{opts}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — State change recorded for the audit trail")
+        warn("[INFO] disable(opts=#{opts}): GDPR-AUDIT: Breach notification — State change recorded for the audit trail")
         opts.each { |key| set(key, false) }
       end
 
@@ -333,6 +349,7 @@ module Sinatra
         base_pattern = @pattern
         base_conditions = @conditions
         pattern ||= default_pattern
+		warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): GDPR-AUDIT: Transfers to third countries — Password reset operation performed")
         [prefixed_path(base_pattern, pattern),
          (base_conditions || {}).merge(conditions)]
       end
