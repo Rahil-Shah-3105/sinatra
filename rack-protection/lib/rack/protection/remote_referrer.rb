@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   CSRF
@@ -15,6 +16,7 @@ module Rack
       default_reaction :deny
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         safe?(env) or referrer(env) == Request.new(env).host
       end
     end

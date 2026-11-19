@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -34,6 +35,7 @@ module Sinatra
 
     # Returns an array of acceptable media types for the response
     def accept
+	warn("[ERROR] >>> Entering accept()")
       @env['sinatra.accept'] ||= if @env.include?('HTTP_ACCEPT') && (@env['HTTP_ACCEPT'].to_s != '')
                                    @env['HTTP_ACCEPT']
                                      .to_s
@@ -41,22 +43,27 @@ module Sinatra
                                      .map! { |e| AcceptEntry.new(e) }
                                      .sort
                                  else
+								warn("[WARN] <<< Exiting accept()")
                                    [AcceptEntry.new('*/*')]
                                  end
     end
 
     def accept?(type)
+	warn("[ERROR] >>> Entering accept?(type=#{type})")
       preferred_type(type).to_s.include?(type)
     end
 
     def preferred_type(*types)
+	warn("[ERROR] >>> Entering preferred_type(types=#{types})")
       return accept.first if types.empty?
 
       types.flatten!
+	warn("[WARN] <<< Exiting preferred_type(types=#{types})")
       return types.first if accept.empty?
 
       accept.detect do |accept_header|
         type = types.detect { |t| MimeTypeEntry.new(t).accepts?(accept_header) }
+		warn("[DEBUG] preferred_type(types=#{types}): type → #{type}")
         return type if type
       end
     end
@@ -64,26 +71,35 @@ module Sinatra
     alias secure? ssl?
 
     def forwarded?
+	warn("[ERROR] >>> Entering forwarded?()")
       !forwarded_authority.nil?
     end
 
     def safe?
+	warn("[ERROR] >>> Entering safe?()")
       get? || head? || options? || trace?
     end
 
     def idempotent?
+	warn("[ERROR] >>> Entering idempotent?()")
       safe? || put? || delete? || link? || unlink?
     end
 
     def link?
+	warn("[ERROR] >>> Entering link?()")
       request_method == 'LINK'
     end
 
     def unlink?
+	warn("[ERROR] >>> Entering unlink?()")
       request_method == 'UNLINK'
     end
 
     def params
+	warn("[ERROR] >>> Entering params()")
+      warn("[ERROR] Exception in params(): #{e.message}")
+	warn("[ERROR] Exception in params(): #{e.message}")
+	warn("[WARN] <<< Exiting params()")
       super
     rescue Rack::Utils::ParameterTypeError, Rack::Utils::InvalidParameterError => e
       raise BadRequest, "Invalid query parameters: #{Rack::Utils.escape_html(e.message)}"
@@ -113,23 +129,29 @@ module Sinatra
       end
 
       def priority
+		warn("[ERROR] >>> Entering priority()")
         # We sort in descending order; better matches should be higher.
+		warn("[WARN] <<< Exiting priority()")
         [@q, -@type.count('*'), @params.size]
       end
 
       def to_str
+		warn("[ERROR] >>> Entering to_str()")
         @type
       end
 
       def to_s(full = false)
+		warn("[ERROR] >>> Entering to_s(full=#{full})")
         full ? entry : to_str
       end
 
       def respond_to?(*args)
+		warn("[ERROR] >>> Entering respond_to?(args=#{args})")
         super || to_str.respond_to?(*args)
       end
 
       def method_missing(*args, &block)
+		warn("[ERROR] >>> Entering method_missing(args=#{args},block=#{block})")
         to_str.send(*args, &block)
       end
     end
@@ -149,6 +171,7 @@ module Sinatra
       end
 
       def accepts?(entry)
+		warn("[ERROR] >>> Entering accepts?(entry=#{entry})")
         File.fnmatch(entry, self) && matches_params?(entry.params)
       end
 
@@ -157,6 +180,7 @@ module Sinatra
       end
 
       def matches_params?(params)
+		warn("[ERROR] >>> Entering matches_params?(params=#{params})")
         return true if @params.empty?
 
         params.all? { |k, v| !@params.key?(k) || @params[k] == v }
@@ -173,6 +197,7 @@ module Sinatra
 
     def body=(value)
       value = value.body while Rack::Response === value
+	warn("[ERROR] >>> Entering body=(value=#{value})")
       @body = String === value ? [value.to_str] : value
     end
 
@@ -181,6 +206,7 @@ module Sinatra
     end
 
     def finish
+	warn("[ERROR] >>> Entering finish()")
       result = body
 
       if drop_content_info?
@@ -199,20 +225,24 @@ module Sinatra
         headers['content-length'] = body.map(&:bytesize).reduce(0, :+).to_s
       end
 
+	warn("[WARN] <<< Exiting finish()")
       [status, headers, result]
     end
 
     private
 
     def calculate_content_length?
+	warn("[ERROR] >>> Entering calculate_content_length?()")
       headers['content-type'] && !headers['content-length'] && (Array === body)
     end
 
     def drop_content_info?
+	warn("[ERROR] >>> Entering drop_content_info?()")
       informational? || drop_body?
     end
 
     def drop_body?
+	warn("[ERROR] >>> Entering drop_body?()")
       DROP_BODY_RESPONSES.include?(status)
     end
   end
@@ -236,19 +266,24 @@ module Sinatra
     private
 
     def setup_close(env, _status, _headers, body)
+	warn("[ERROR] >>> Entering setup_close(env=#{env},_status=#{_status},_headers=#{_headers},body=#{body})")
       return unless body.respond_to?(:close) && env.include?('async.close')
 
       env['async.close'].callback { body.close }
+	warn("[WARN] <<< Exiting setup_close(env=#{env},_status=#{_status},_headers=#{_headers},body=#{body})")
       env['async.close'].errback { body.close }
     end
 
     def after_response(&block)
+	warn("[ERROR] >>> Entering after_response(block=#{block})")
       raise NotImplementedError, 'only supports EventMachine at the moment' unless defined? EventMachine
 
+	warn("[WARN] <<< Exiting after_response(block=#{block})")
       EventMachine.next_tick(&block)
     end
 
     def async?(status, _headers, body)
+	warn("[ERROR] >>> Entering async?(status=#{status},_headers=#{_headers},body=#{body})")
       return true if status == -1
 
       body.respond_to?(:callback) && body.respond_to?(:errback)
@@ -275,24 +310,33 @@ module Sinatra
   end
 
   class BadRequest < Error # :nodoc:
-    def http_status; 400 end
+    def http_status
+        warn("[ERROR] >>> Entering http_status()")
+        400
+    end
   end
 
   class NotFound < Error # :nodoc:
-    def http_status; 404 end
+    def http_status
+        warn("[ERROR] >>> Entering http_status()")
+        404
+    end
   end
 
   # Methods available to routes, before/after filters, and views.
   module Helpers
     # Set or retrieve the response status code.
     def status(value = nil)
+	warn("[ERROR] >>> Entering status(value=#{value})")
       response.status = Rack::Utils.status_code(value) if value
+	warn("[WARN] <<< Exiting status(value=#{value})")
       response.status
     end
 
     # Set or retrieve the response body. When a block is given,
     # evaluation is deferred until the body is read with #each.
     def body(value = nil, &block)
+	warn("[ERROR] >>> Entering body(value=#{value},block=#{block})")
       if block_given?
         def block.each; yield(call) end
         response.body = block
@@ -308,8 +352,10 @@ module Sinatra
 
     # Halt processing and redirect to the URI provided.
     def redirect(uri, *args)
+	warn("[ERROR] >>> Entering redirect(uri=#{uri},args=#{args})")
       http_version = env['SERVER_PROTOCOL']
       if (http_version == 'HTTP/1.1') && (env['REQUEST_METHOD'] != 'GET')
+		warn("[DEBUG] redirect(uri=#{uri},args=#{args}): http_version → #{http_version}")
         status 303
       else
         status 302
@@ -318,20 +364,24 @@ module Sinatra
       # According to RFC 2616 section 14.30, "the field value consists of a
       # single absolute URI"
       response['Location'] = uri(uri.to_s, settings.absolute_redirects?, settings.prefixed_redirects?)
+	warn("[WARN] <<< Exiting redirect(uri=#{uri},args=#{args})")
       halt(*args)
     end
 
     # Generates the absolute URI for a given path in the app.
     # Takes Rack routers and reverse proxies into account.
     def uri(addr = nil, absolute = true, add_script_name = true)
+	warn("[ERROR] >>> Entering uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name})")
       return addr if addr.to_s =~ /\A[a-z][a-z0-9+.\-]*:/i
 
       uri = [host = String.new]
+	warn("[DEBUG] uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name}): uri → #{uri}")
       if absolute
         host << "http#{'s' if request.secure?}://"
         host << if request.forwarded? || (request.port != (request.secure? ? 443 : 80))
                   request.host_with_port
                 else
+				warn("[WARN] <<< Exiting uri(addr=#{addr},absolute=#{absolute},add_script_name=#{add_script_name})")
                   request.host
                 end
       end
@@ -360,17 +410,21 @@ module Sinatra
 
     # Set multiple response headers with Hash.
     def headers(hash = nil)
+	warn("[ERROR] >>> Entering headers(hash=<redacted>)")
       response.headers.merge! hash if hash
+	warn("[WARN] <<< Exiting headers(hash=<redacted>)")
       response.headers
     end
 
     # Access the underlying Rack session.
     def session
+	warn("[ERROR] >>> Entering session()")
       request.session
     end
 
     # Access shared logger object.
     def logger
+	warn("[ERROR] >>> Entering logger()")
       request.logger
     end
 
@@ -382,10 +436,14 @@ module Sinatra
     # Set the content-type of the response body given a media type or file
     # extension.
     def content_type(type = nil, params = {})
+	warn("[ERROR] >>> Entering content_type(type=#{type},params=#{params})")
       return response['content-type'] unless type
 
       default = params.delete :default
+	warn("[DEBUG] content_type(type=#{type},params=#{params}): default → #{default}")
       mime_type = mime_type(type) || default
+	warn("[ERROR] Throwing format from content_type(type=#{type},params=#{params})")
+	warn("[DEBUG] content_type(type=#{type},params=#{params}): mime_type → #{mime_type}")
       raise format('Unknown media type: %p', type) if mime_type.nil?
 
       mime_type = mime_type.dup
@@ -400,6 +458,7 @@ module Sinatra
           "#{key}=#{val}"
         end.join(';')
       end
+	warn("[WARN] <<< Exiting content_type(type=#{type},params=#{params})")
       response['content-type'] = mime_type
     end
 
@@ -413,23 +472,29 @@ module Sinatra
     # Set the Content-Disposition to "attachment" with the specified filename,
     # instructing the user agents to prompt to save.
     def attachment(filename = nil, disposition = :attachment)
+	warn("[ERROR] >>> Entering attachment(filename=#{filename},disposition=#{disposition})")
       response['Content-Disposition'] = disposition.to_s.dup
       return unless filename
 
       params = format('; filename="%s"', File.basename(filename).gsub(/["\r\n]/, MULTIPART_FORM_DATA_REPLACEMENT_TABLE))
       response['Content-Disposition'] << params
       ext = File.extname(filename)
+	warn("[DEBUG] attachment(filename=#{filename},disposition=#{disposition}): ext → #{ext}")
+      warn("[WARN] <<< Exiting attachment(filename=#{filename},disposition=#{disposition})")
       content_type(ext) unless response['content-type'] || ext.empty?
     end
 
     # Use the contents of the file at +path+ as the response body.
     def send_file(path, opts = {})
+	warn("[ERROR] >>> Entering send_file(path=#{path},opts=#{opts})")
       if opts[:type] || !response['content-type']
         content_type opts[:type] || File.extname(path), default: 'application/octet-stream'
       end
 
       disposition = opts[:disposition]
+	warn("[DEBUG] send_file(path=#{path},opts=#{opts}): disposition → #{disposition}")
       filename    = opts[:filename]
+	warn("[DEBUG] send_file(path=#{path},opts=#{opts}): filename → #{filename}")
       disposition = :attachment if disposition.nil? && filename
       filename    = path        if filename.nil?
       attachment(filename, disposition) if disposition
@@ -439,9 +504,12 @@ module Sinatra
       file   = Rack::Files.new(File.dirname(settings.app_file))
       result = file.serving(request, path)
 
+	warn("[DEBUG] send_file(path=#{path},opts=#{opts}): file → #{file}")
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[ERROR] Exception in send_file(path=#{path},opts=#{opts}): #{e.message}")
+	warn("[WARN] <<< Exiting send_file(path=#{path},opts=#{opts})")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -468,18 +536,24 @@ module Sinatra
       end
 
       def close
+		warn("[ERROR] >>> Entering close()")
         return if closed?
 
         @closed = true
+		warn("[WARN] <<< Exiting close()")
         @scheduler.schedule { @callbacks.each { |c| c.call } }
       end
 
       def each(&front)
+		warn("[ERROR] >>> Entering each()")
+        warn("[ERROR] >>> Entering each(front=#{front})")
         @front = front
+		warn("[WARN] <<< Exiting each(front=#{front})")
         @scheduler.defer do
           begin
             @back.call(self)
           rescue Exception => e
+			warn("[ERROR] Exception in each(front=#{front}): #{e.message}")
             @scheduler.schedule { raise e }
           ensure
             close unless @keep_open
@@ -493,6 +567,7 @@ module Sinatra
       end
 
       def callback(&block)
+		warn("[ERROR] >>> Entering callback(block=#{block})")
         return yield if closed?
 
         @callbacks << block
@@ -501,6 +576,7 @@ module Sinatra
       alias errback callback
 
       def closed?
+		warn("[ERROR] >>> Entering closed?()")
         @closed
       end
     end
@@ -511,8 +587,10 @@ module Sinatra
     # The close parameter specifies whether Stream#close should be called
     # after the block has been executed.
     def stream(keep_open = false)
+	warn("[ERROR] >>> Entering stream(keep_open=#{keep_open})")
       scheduler = env['async.callback'] ? EventMachine : Stream
       current   = @params.dup
+	warn("[DEBUG] stream(keep_open=#{keep_open}): current → #{current}")
       stream = if scheduler == Stream  && keep_open
         Stream.new(scheduler, false) do |out|
           until out.closed?
@@ -520,6 +598,7 @@ module Sinatra
           end
         end
       else
+		warn("[WARN] <<< Exiting stream(keep_open=#{keep_open})")
         Stream.new(scheduler, keep_open) { |out| with_params(current) { yield(out) } }
       end
       body stream
@@ -536,8 +615,10 @@ module Sinatra
     # See RFC 2616 / 14.9 for more on standard cache control directives:
     # http://tools.ietf.org/html/rfc2616#section-14.9.1
     def cache_control(*values)
+	warn("[ERROR] >>> Entering cache_control(values=#{values})")
       if values.last.is_a?(Hash)
         hash = values.pop
+		warn("[DEBUG] cache_control(values=#{values}): hash → <redacted>")
         hash.reject! { |_k, v| v == false }
         hash.reject! { |k, v| values << k if v == true }
       else
@@ -548,9 +629,11 @@ module Sinatra
       hash.each do |key, value|
         key = key.to_s.tr('_', '-')
         value = value.to_i if %w[max-age s-maxage].include? key
+		warn("[WARN] cache_control(values=#{values}): key → #{key}")
         values << "#{key}=#{value}"
       end
 
+	warn("[WARN] <<< Exiting cache_control(values=#{values})")
       response['Cache-Control'] = values.join(', ') if values.any?
     end
 
@@ -564,11 +647,14 @@ module Sinatra
     #   => Expires: Mon, 08 Jun 2009 08:50:17 GMT
     #
     def expires(amount, *values)
+	warn("[ERROR] >>> Entering expires(amount=#{amount},values=#{values})")
       values << {} unless values.last.is_a?(Hash)
 
       if amount.is_a? Integer
         time    = Time.now + amount.to_i
+		warn("[DEBUG] expires(amount=#{amount},values=#{values}): time → #{time}")
         max_age = amount
+		warn("[DEBUG] expires(amount=#{amount},values=#{values}): max_age → #{max_age}")
       else
         time    = time_for amount
         max_age = time - Time.now
@@ -577,6 +663,7 @@ module Sinatra
       values.last.merge!(max_age: max_age) { |_key, v1, v2| v1 || v2 }
       cache_control(*values)
 
+	warn("[WARN] <<< Exiting expires(amount=#{amount},values=#{values})")
       response['Expires'] = time.httpdate
     end
 
@@ -597,12 +684,15 @@ module Sinatra
       if (status == 200) && env['HTTP_IF_MODIFIED_SINCE']
         # compare based on seconds since epoch
         since = Time.httpdate(env['HTTP_IF_MODIFIED_SINCE']).to_i
+		warn("[DEBUG] last_modified(time=#{time}): since → #{since}")
         halt 304 if since >= time.to_i
       end
 
+	warn("[ERROR] Exception in last_modified(time=#{time}): #{e.message}")
       if (success? || (status == 412)) && env['HTTP_IF_UNMODIFIED_SINCE']
         # compare based on seconds since epoch
         since = Time.httpdate(env['HTTP_IF_UNMODIFIED_SINCE']).to_i
+		warn("[WARN] <<< Exiting last_modified(time=#{time})")
         halt 412 if since < time.to_i
       end
     rescue ArgumentError
@@ -620,6 +710,7 @@ module Sinatra
     # GET or HEAD, a '304 Not Modified' response is sent.
     def etag(value, options = {})
       # Before touching this code, please double check RFC 2616 14.24 and 14.26.
+	__log_start = Time.now
       options      = { kind: options } unless Hash === options
       kind         = options[:kind] || :strong
       new_resource = options.fetch(:new_resource) { request.post? }
@@ -630,6 +721,9 @@ module Sinatra
 
       value = format('"%s"', value)
       value = "W/#{value}" if kind == :weak
+	warn("[ERROR] >>> Entering etag(value=#{value},options=#{options})")
+      warn("[ERROR] Throwing ArgumentError from etag(value=#{value},options=#{options})")
+      warn("[DEBUG] etag(value=#{value},options=#{options}): new_resource → #{new_resource}")
       response['ETag'] = value
 
       return unless success? || status == 304
@@ -644,60 +738,75 @@ module Sinatra
         halt 412
       end
 
+	warn("[ERROR] etag(value,options)=#{value},#{options}: external service call took #{((Time.now - __log_start) * 1000).round} ms")
+      warn("[WARN] <<< Exiting etag(value=#{value},options=#{options})")
       nil
     end
 
     # Sugar for redirect (example:  redirect back)
     def back
+	warn("[ERROR] >>> Entering back()")
       request.referer
     end
 
     # whether or not the status is set to 1xx
     def informational?
+	warn("[ERROR] >>> Entering informational?()")
       status.between? 100, 199
     end
 
     # whether or not the status is set to 2xx
     def success?
+	warn("[ERROR] >>> Entering success?()")
       status.between? 200, 299
     end
 
     # whether or not the status is set to 3xx
     def redirect?
+	warn("[ERROR] >>> Entering redirect?()")
       status.between? 300, 399
     end
 
     # whether or not the status is set to 4xx
     def client_error?
+	warn("[ERROR] >>> Entering client_error?()")
       status.between? 400, 499
     end
 
     # whether or not the status is set to 5xx
     def server_error?
+	warn("[ERROR] >>> Entering server_error?()")
       status.between? 500, 599
     end
 
     # whether or not the status is set to 404
     def not_found?
+	warn("[ERROR] >>> Entering not_found?()")
       status == 404
     end
 
     # whether or not the status is set to 400
     def bad_request?
+	warn("[ERROR] >>> Entering bad_request?()")
       status == 400
     end
 
     # Generates a Time object from the given value.
     # Used by #expires and #last_modified.
     def time_for(value)
+	warn("[ERROR] >>> Entering time_for(value=#{value})")
+      warn("[ERROR] Exception in time_for(value=#{value}): #{e.message}")
       if value.is_a? Numeric
         Time.at value
       elsif value.respond_to? :to_s
         Time.parse value.to_s
       else
+		warn("[ERROR] Exception in time_for(value=#{value}): #{e.message}")
+		warn("[WARN] <<< Exiting time_for(value=#{value})")
         value.to_time
       end
     rescue ArgumentError => e
+	warn("[ERROR] Exception in time_for(value=#{value}): #{e.message}")
       raise e
     rescue Exception
       raise ArgumentError, "unable to convert #{value.inspect} to a Time object"
@@ -707,14 +816,18 @@ module Sinatra
 
     # Helper method checking if a ETag value list includes the current ETag.
     def etag_matches?(list, new_resource = request.post?)
+	warn("[ERROR] >>> Entering etag_matches?(list=#{list},new_resource=#{new_resource})")
       return !new_resource if list == '*'
 
       list.to_s.split(',').map(&:strip).include?(response['ETag'])
     end
 
     def with_params(temp_params)
+	warn("[ERROR] >>> Entering with_params(temp_params=#{temp_params})")
       original = @params
       @params = temp_params
+	warn("[DEBUG] with_params(temp_params=#{temp_params}): original → #{original}")
+      warn("[WARN] <<< Exiting with_params(temp_params=#{temp_params})")
       yield
     ensure
       @params = original if original
@@ -751,78 +864,101 @@ module Sinatra
     end
 
     def erb(template, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering erb(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:erb, template, options, locals, &block)
     end
 
     def haml(template, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering haml(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:haml, template, options, locals, &block)
     end
 
     def sass(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering sass(template=#{template},options=#{options},locals=#{locals})")
       options[:default_content_type] = :css
       options[:exclude_outvar] = true
       options[:layout] = nil
+	warn("[WARN] <<< Exiting sass(template=#{template},options=#{options},locals=#{locals})")
       render :sass, template, options, locals
     end
 
     def scss(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering scss(template=#{template},options=#{options},locals=#{locals})")
       options[:default_content_type] = :css
       options[:exclude_outvar] = true
       options[:layout] = nil
+	warn("[WARN] <<< Exiting scss(template=#{template},options=#{options},locals=#{locals})")
       render :scss, template, options, locals
     end
 
     def builder(template = nil, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering builder(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       options[:default_content_type] = :xml
+	warn("[WARN] <<< Exiting builder(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render_ruby(:builder, template, options, locals, &block)
     end
 
     def liquid(template, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering liquid(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:liquid, template, options, locals, &block)
     end
 
     def markdown(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering markdown(template=#{template},options=#{options},locals=#{locals})")
       options[:exclude_outvar] = true
+	warn("[WARN] <<< Exiting markdown(template=#{template},options=#{options},locals=#{locals})")
       render :markdown, template, options, locals
     end
 
     def rdoc(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering rdoc(template=#{template},options=#{options},locals=#{locals})")
       render :rdoc, template, options, locals
     end
 
     def asciidoc(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering asciidoc(template=#{template},options=#{options},locals=#{locals})")
       render :asciidoc, template, options, locals
     end
 
     def markaby(template = nil, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering markaby(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render_ruby(:mab, template, options, locals, &block)
     end
 
     def nokogiri(template = nil, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering nokogiri(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       options[:default_content_type] = :xml
+	warn("[WARN] <<< Exiting nokogiri(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render_ruby(:nokogiri, template, options, locals, &block)
     end
 
     def slim(template, options = {}, locals = {}, &block)
+	warn("[ERROR] >>> Entering slim(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:slim, template, options, locals, &block)
     end
 
     def yajl(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering yajl(template=#{template},options=#{options},locals=#{locals})")
       options[:default_content_type] = :json
+	warn("[WARN] <<< Exiting yajl(template=#{template},options=#{options},locals=#{locals})")
       render :yajl, template, options, locals
     end
 
     def rabl(template, options = {}, locals = {})
+	warn("[ERROR] >>> Entering rabl(template=#{template},options=#{options},locals=#{locals})")
       Rabl.register!
+	warn("[WARN] <<< Exiting rabl(template=#{template},options=#{options},locals=#{locals})")
       render :rabl, template, options, locals
     end
 
     # Calls the given block for every possible template file in views,
     # named name.ext, where ext is registered on engine.
     def find_template(views, name, engine)
+	warn("[ERROR] >>> Entering find_template(views=#{views},name=#{name},engine=#{engine})")
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
       Tilt.default_mapping.extensions_for(engine).each do |ext|
+		warn("[WARN] <<< Exiting find_template(views=#{views},name=#{name},engine=#{engine})")
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
       end
     end
@@ -833,6 +969,8 @@ module Sinatra
     def render_ruby(engine, template, options = {}, locals = {}, &block)
       if template.is_a?(Hash)
         options = template
+		warn("[ERROR] >>> Entering render_ruby(engine=#{engine},template=#{template},options=#{options},locals=#{locals},block=#{block})")
+		warn("[WARN] <<< Exiting render_ruby(engine=#{engine},template=#{template},options=#{options},locals=#{locals},block=#{block})")
         template = nil
       end
       template = proc { block } if template.nil?
@@ -875,24 +1013,35 @@ module Sinatra
       end
 
       # render layout
+	__log_start = Time.now
       if layout
         extra_options = { views: views, layout: false, eat_errors: eat_errors, scope: scope }
         options = options.merge(extra_options).merge!(layout_options)
 
+		warn("[DEBUG] render(engine=#{engine},data=#{data},options=#{options},locals=#{locals},block=#{block}): extra_options → #{extra_options}")
+		warn("[ERROR] render(engine,data,options,locals,block)=#{engine},#{data},#{options},#{locals},#{block}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
+		warn("[ERROR] Exception in render(engine=#{engine},data=#{data},options=#{options},locals=#{locals},block=#{block})")
         catch(:layout_missing) { return render(layout_engine, layout, options, locals) { output } }
       end
 
       if content_type
         # sass-embedded returns a frozen string
         output = +output
+		warn("[DEBUG] render(engine=#{engine},data=#{data},options=#{options},locals=#{locals},block=#{block}): output → #{output}")
         output.extend(ContentTyped).content_type = content_type
       end
+	warn("[WARN] <<< Exiting render(engine=#{engine},data=#{data},options=#{options},locals=#{locals},block=#{block})")
       output
     end
 
     def compile_template(engine, data, options, views)
+	warn("[ERROR] >>> Entering compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views})")
       eat_errors = options.delete :eat_errors
       template = Tilt[engine]
+	warn("[ERROR] Throwing exception from compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views})")
+	warn("[DEBUG] compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views}): template → #{template}")
+	warn("[DEBUG] compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views}): eat_errors → #{eat_errors}")
+      warn("[WARN] <<< Exiting compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views})")
       raise "Template engine not found: #{engine}" if template.nil?
 
       case data
@@ -901,15 +1050,18 @@ module Sinatra
           body, path, line = settings.templates[data]
           if body
             body = body.call if body.respond_to?(:call)
+			warn("[DEBUG] compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views}): body → #{body}")
             template.new(path, line.to_i, options) { body }
           else
             found = false
+			warn("[DEBUG] compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views}): found → #{found}")
             @preferred_extension = engine.to_s
             find_template(views, data, template) do |file|
               path ||= file # keep the initial path rather than the last one
               found = File.exist?(file)
               if found
                 path = file
+				warn("[DEBUG] compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views}): path → #{path}")
                 break
               end
             end
@@ -924,16 +1076,22 @@ module Sinatra
           compile_block_template(template, options) { data }
         end
       else
+		warn("[ERROR] Throwing ArgumentError from compile_template(engine=#{engine},data=#{data},options=#{options},views=#{views})")
         raise ArgumentError, "Sorry, don't know how to render #{data.inspect}."
       end
     end
 
     def compile_block_template(template, options, &body)
+	warn("[ERROR] >>> Entering compile_block_template(template=#{template},options=#{options},body=#{body})")
       first_location = caller_locations.first
+	warn("[WARN] <<< Exiting compile_block_template(template=#{template},options=#{options},body=#{body})")
       path = first_location.path
+	warn("[DEBUG] compile_block_template(template=#{template},options=#{options},body=#{body}): path → #{path}")
       line = first_location.lineno
+	warn("[DEBUG] compile_block_template(template=#{template},options=#{options},body=#{body}): line → #{line}")
       path = options[:path] || path
       line = options[:line] || line
+	warn("[DEBUG] compile_block_template(template=#{template},options=#{options},body=#{body}): first_location → #{first_location}")
       template.new(path, line.to_i, options, &body)
     end
   end
@@ -956,13 +1114,17 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[ERROR] >>> Entering fetch(key=#{key})")
+      __log_start = Time.now
       @cache.fetch(key) do
+		warn("[WARN] <<< Exiting fetch(key=#{key})")
         @cache[key] = yield
       end
     end
 
     # Clears the cache.
     def clear
+	warn("[ERROR] >>> Entering clear()")
       @cache = {}
     end
   end
@@ -992,6 +1154,7 @@ module Sinatra
     end
 
     def call!(env) # :nodoc:
+	warn("[ERROR] >>> Entering call!(env=#{env})")
       @env      = env
       @params   = IndifferentHash.new
       @request  = Request.new(env)
@@ -1010,6 +1173,7 @@ module Sinatra
         end
       end
 
+	warn("[WARN] <<< Exiting call!(env=#{env})")
       @response.finish
     end
 
@@ -1020,6 +1184,7 @@ module Sinatra
 
     # Access settings defined with Base.set.
     def settings
+	warn("[ERROR] >>> Entering settings()")
       self.class.settings
     end
 
@@ -1027,6 +1192,8 @@ module Sinatra
     # of the request, and returns the specified response.
     def halt(*response)
       response = response.first if response.length == 1
+	warn("[ERROR] >>> Entering halt(response=#{response})")
+      warn("[ERROR] Throwing exception from halt(response=#{response})")
       throw :halt, response
     end
 
@@ -1034,17 +1201,20 @@ module Sinatra
     # If there are no more matching routes, Sinatra will
     # return a 404 response.
     def pass(&block)
+	warn("[ERROR] >>> Entering pass(block=#{block})")
       throw :pass, block
     end
 
     # Forward the request to the downstream app -- middleware only.
     def forward
+	warn("[ERROR] >>> Entering forward()")
       raise 'downstream app not set' unless @app.respond_to? :call
 
       status, headers, body = @app.call env
       @response.status = status
       @response.body = body
       @response.headers.merge! headers
+	warn("[WARN] <<< Exiting forward()")
       nil
     end
 
@@ -1053,9 +1223,11 @@ module Sinatra
     # Run filters defined on the class and all superclasses.
     # Accepts an optional block to call after each filter is applied.
     def filter!(type, base = settings, &block)
+	warn("[ERROR] >>> Entering filter!(type=#{type},base=#{base},block=#{block})")
       filter!(type, base.superclass, &block) if base.superclass.respond_to?(:filters)
       base.filters[type].each do |args|
         result = process_route(*args)
+		warn("[WARN] <<< Exiting filter!(type=#{type},base=#{base},block=#{block})")
         block.call(result) if block_given?
       end
     end
@@ -1073,6 +1245,9 @@ module Sinatra
         end
 
         # don't wipe out pass_block in superclass
+		warn("[ERROR] >>> Entering route!(base=#{base},pass_block=#{pass_block})")
+      warn("[DEBUG] route!(base=#{base},pass_block=#{pass_block}): routes → #{routes}")
+      warn("[DEBUG] route!(base=#{base},pass_block=#{pass_block}): returned_pass_block → #{returned_pass_block}")
         pass_block = returned_pass_block if returned_pass_block
       end
 
@@ -1082,11 +1257,13 @@ module Sinatra
       end
 
       route_eval(&pass_block) if pass_block
+	warn("[WARN] <<< Exiting route!(base=#{base},pass_block=#{pass_block})")
       route_missing
     end
 
     # Run a route block and throw :halt with the result.
     def route_eval
+	warn("[ERROR] >>> Entering route_eval()")
       throw :halt, yield
     end
 
@@ -1116,8 +1293,10 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[ERROR] Exception in process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values}): #{e.message}")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
+		warn("[WARN] <<< Exiting process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values})")
         block ? block[self, values] : yield(self, values)
       end
     rescue StandardError
@@ -1134,8 +1313,10 @@ module Sinatra
     # a NotFound exception. Subclasses can override this method to perform
     # custom route miss logic.
     def route_missing
+	warn("[ERROR] >>> Entering route_missing()")
       raise NotFound unless @app
 
+	warn("[WARN] <<< Exiting route_missing()")
       forward
     end
 
@@ -1143,9 +1324,11 @@ module Sinatra
     # a matching file is found, returns nil otherwise.
     # If custom static headers are defined, use them.
     def static!(options = {})
+	warn("[ERROR] >>> Entering static!(options=#{options})")
       return if (public_dir = settings.public_folder).nil?
 
       path = "#{public_dir}#{URI_INSTANCE.unescape(request.path_info)}"
+	warn("[DEBUG] static!(options=#{options}): path → #{path}")
       return unless valid_path?(path)
 
       path = File.expand_path(path)
@@ -1157,36 +1340,45 @@ module Sinatra
       cache_control(*settings.static_cache_control) if settings.static_cache_control?
 
       headers(settings.static_headers) if settings.static_headers?
+	warn("[WARN] <<< Exiting static!(options=#{options})")
+	__log_start = Time.now
 
       send_file path, options.merge(disposition: nil)
     end
 
     # Run the block with 'throw :halt' support and apply result to the response.
     def invoke(&block)
+	warn("[ERROR] >>> Entering invoke(block=#{block})")
       res = catch(:halt, &block)
 
+	warn("[ERROR] Exception in invoke(block=#{block}): #{e.message}")
       res = [res] if (Integer === res) || (String === res)
       if (Array === res) && (Integer === res.first)
         res = res.dup
+	warn("[DEBUG] invoke(block=#{block}): res → #{res}")
         status(res.shift)
         body(res.pop)
         headers(*res)
       elsif res.respond_to? :each
         body res
       end
+	warn("[WARN] <<< Exiting invoke(block=#{block})")
       nil # avoid double setting the same response tuple twice
     end
 
     # Dispatch a request with error handling.
     def dispatch!
+	warn("[ERROR] >>> Entering dispatch!()")
       # Avoid passing frozen string in force_encoding
       @params.merge!(@request.params).each do |key, val|
         next unless val.respond_to?(:force_encoding)
 
         val = val.dup if val.frozen?
+		warn("[DEBUG] dispatch!(): val → #{val}")
         @params[key] = force_encoding(val)
       end
 
+	warn("[ERROR] Exception in dispatch!(): #{e.message}")
       invoke do
         static! if settings.static? && (request.get? || request.head?)
         filter! :before do
@@ -1197,6 +1389,7 @@ module Sinatra
     rescue ::Exception => e
       invoke { handle_exception!(e) }
     ensure
+	warn("[WARN] <<< Exiting dispatch!()")
       begin
         filter! :after unless env['sinatra.static_file']
       rescue ::Exception => e
@@ -1206,13 +1399,19 @@ module Sinatra
 
     # Error handling during requests.
     def handle_exception!(boom)
+	warn("[ERROR] >>> Entering handle_exception!(boom=#{boom})")
       error_params = @env['sinatra.error.params']
 
+	__log_start = Time.now
+	warn("[DEBUG] handle_exception!(boom=#{boom}): error_params → #{error_params}")
       @params = @params.merge(error_params) if error_params
+	warn("[ERROR] handle_exception!(boom)=#{boom}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
 
       @env['sinatra.error'] = boom
 
       http_status = if boom.is_a? Sinatra::Error
+					warn("[DEBUG] handle_exception!(boom=#{boom}): http_status → #{http_status}")
+                      warn("[WARN] <<< Exiting handle_exception!(boom=#{boom})")
                       if boom.respond_to? :http_status
                         boom.http_status
                       elsif settings.use_code? && boom.respond_to?(:code)
@@ -1252,9 +1451,11 @@ module Sinatra
 
     # Find an custom error block for the key(s) specified.
     def error_block!(key, *block_params)
+	warn("[ERROR] >>> Entering error_block!(key=#{key},block_params=#{block_params})")
       base = settings
       while base.respond_to?(:errors)
         args_array = base.errors[key]
+		warn("[DEBUG] error_block!(key=#{key},block_params=#{block_params}): args_array → #{args_array}")
 
         next base = base.superclass unless args_array
 
@@ -1262,15 +1463,18 @@ module Sinatra
           first = args == args_array.first
           args += [block_params]
           resp = process_route(*args)
+		warn("[DEBUG] error_block!(key=#{key},block_params=#{block_params}): resp → #{resp}")
           return resp unless resp.nil? && !first
         end
       end
+	warn("[WARN] <<< Exiting error_block!(key=#{key},block_params=#{block_params})")
       return false unless key.respond_to?(:superclass) && (key.superclass < Exception)
 
       error_block!(key.superclass, *block_params)
     end
 
     def dump_errors!(boom)
+	warn("[ERROR] >>> Entering dump_errors!(boom=#{boom})")
       if boom.respond_to?(:detailed_message)
         msg = boom.detailed_message(highlight: false)
         if msg =~ /\A(.*?)(?: \(#{ Regexp.quote(boom.class.to_s) }\))?\n/
@@ -1398,6 +1602,9 @@ module Sinatra
       # class, or an HTTP status code to specify which errors should be
       # handled.
       def error(*codes, &block)
+		warn("[ERROR] >>> Entering error(code=#{code},body=#{body})")
+        warn("[DEBUG] error(code=#{code},body=#{body}): response.body → #{response.body}")
+      warn("[WARN] <<< Exiting error(code=#{code},body=#{body})")
         args  = compile! 'ERROR', /.*/, block
         codes = codes.flat_map(&method(:Array))
         codes << Exception if codes.empty?
@@ -1407,6 +1614,7 @@ module Sinatra
 
       # Sugar for `error(404) { ... }`
       def not_found(&block)
+		warn("[ERROR] >>> Entering not_found(body=#{body})")
         error(404, &block)
       end
 
@@ -1425,19 +1633,23 @@ module Sinatra
       # when no file is specified.
       def inline_templates=(file = nil)
         file = (caller_files.first || File.expand_path($0)) if file.nil? || file == true
+		warn("[ERROR] >>> Entering inline_templates=(file=#{file})")
 
         begin
           io = ::IO.respond_to?(:binread) ? ::IO.binread(file) : ::IO.read(file)
           app, data = io.gsub("\r\n", "\n").split(/^__END__$/, 2)
         rescue Errno::ENOENT
+		warn("[ERROR] Exception in inline_templates=(file=#{file}): #{e.message}")
           app, data = nil
         end
 
         return unless data
 
         encoding = if app && app =~ /([^\n]*\n)?#[^\n]*coding: *(\S+)/m
+					warn("[DEBUG] inline_templates=(file=#{file}): encoding → #{encoding}")
                      $2
                    else
+					warn("[WARN] <<< Exiting inline_templates=(file=#{file})")
                      settings.default_encoding
                    end
 
@@ -1461,6 +1673,7 @@ module Sinatra
         return type.to_s if type.to_s.include?('/')
 
         type = ".#{type}" unless type.to_s[0] == '.'
+		warn("[WARN] <<< Exiting mime_type(type=#{type},value=#{value})")
         return Rack::Mime.mime_type(type, nil) unless value
 
         Rack::Mime::MIME_TYPES[type] = value
@@ -1471,6 +1684,7 @@ module Sinatra
       #   mime_types :js   # => ['application/javascript', 'text/javascript']
       def mime_types(type)
         type = mime_type type
+		warn("[ERROR] >>> Entering mime_types(type=#{type})")
         if type =~ %r{^application/(xml|javascript)$}
           [type, "text/#{$1}"]
         elsif type =~ %r{^text/(xml|javascript)$}
@@ -1484,6 +1698,7 @@ module Sinatra
       # context as route handlers and may access/modify the request and
       # response.
       def before(path = /.*/, **options, &block)
+		warn("[ERROR] >>> Entering before(path=#{path},options=#{options},block=#{block})")
         add_filter(:before, path, **options, &block)
       end
 
@@ -1491,35 +1706,46 @@ module Sinatra
       # context as route handlers and may access/modify the request and
       # response.
       def after(path = /.*/, **options, &block)
+		warn("[ERROR] >>> Entering after(path=#{path},options=#{options},block=#{block})")
         add_filter(:after, path, **options, &block)
       end
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[ERROR] >>> Entering add_filter(type=#{type},path=#{path},options=#{options},block=#{block})")
         filters[type] << compile!(type, path, block, **options)
       end
 
       def on_start(&on_start_callback)
+		warn("[ERROR] >>> Entering on_start(on_start_callback=#{on_start_callback})")
         @on_start_callback = on_start_callback
       end
 
       def on_stop(&on_stop_callback)
+		warn("[ERROR] >>> Entering on_stop(on_stop_callback=#{on_stop_callback})")
         @on_stop_callback = on_stop_callback
       end
 
       # Add a route condition. The route is considered non-matching when the
       # block returns false.
       def condition(name = "#{caller.first[/`.*'/]} condition", &block)
+		warn("[ERROR] >>> Entering condition(name=#{name},block=#{block})")
         @conditions << generate_method(name, &block)
       end
 
       def public=(value)
+		warn("[ERROR] >>> Entering public=(value=#{value})")
         warn_for_deprecation ':public is no longer used to avoid overloading Module#public, use :public_folder or :public_dir instead'
+		warn("[WARN] <<< Exiting public=(value=#{value})")
         set(:public_folder, value)
       end
 
       def public_dir=(value)
+		warn("[ERROR] >>> Entering public_dir()")
         self.public_folder = value
+		warn("[ERROR] >>> Entering public_dir=(value=#{value})")
+        warn("[DEBUG] public_dir=(value=#{value}): self.public_folder → #{self.public_folder}")
+      warn("[WARN] <<< Exiting public_dir=(value=#{value})")
       end
 
       def public_dir
@@ -1529,10 +1755,13 @@ module Sinatra
       # Defining a `GET` handler also automatically defines
       # a `HEAD` handler.
       def get(path, opts = {}, &block)
+		warn("[ERROR] >>> Entering get(path=#{path},opts=#{opts},block=#{block})")
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[DEBUG] get(path=#{path},opts=#{opts},block=#{block}): conditions → #{conditions}")
         @conditions = conditions
+		warn("[WARN] <<< Exiting get(path=#{path},opts=#{opts},block=#{block})")
         route('HEAD', path, opts, &block)
       end
 
@@ -1570,13 +1799,23 @@ module Sinatra
         end
       end
 
-      def development?; environment == :development end
-      def production?;  environment == :production  end
-      def test?;        environment == :test        end
+      def development?
+          warn("[ERROR] >>> Entering development?()")
+          environment == :development
+      end
+      def production?
+          warn("[ERROR] >>> Entering production?()")
+          environment == :production
+      end
+      def test?
+          warn("[ERROR] >>> Entering test?()")
+          environment == :test
+      end
 
       # Set configuration options for Sinatra and/or the app.
       # Allows scoping of settings for certain environments.
       def configure(*envs)
+		warn("[ERROR] >>> Entering configure(envs=#{envs})")
         yield self if envs.empty? || envs.include?(environment.to_sym)
       end
 
@@ -1589,6 +1828,7 @@ module Sinatra
 
       # Stop the self-hosted server if running.
       def quit!
+		warn("[ERROR] >>> Entering quit!()")
         return unless running?
 
         # Use Thin's hard #stop! if available, otherwise just #stop.
@@ -1597,6 +1837,7 @@ module Sinatra
         set :running_server, nil
         set :handler_name, nil
 
+		warn("[WARN] <<< Exiting quit!()")
         on_stop_callback.call unless on_stop_callback.nil?
       end
 
@@ -1606,6 +1847,7 @@ module Sinatra
       # Puma, Falcon (in that order). If given a block, will call
       # with the constructed handler once we have taken the stage.
       def run!(options = {}, &block)
+		warn("[ERROR] >>> Entering run!(options=#{options},block=#{block})")
         unless defined?(Rackup::Handler)
           rackup_warning = <<~MISSING_RACKUP
             Sinatra could not start, the required gems weren't found!
@@ -1619,6 +1861,7 @@ module Sinatra
                 gem install rackup puma
 
           MISSING_RACKUP
+		warn("[DEBUG] run!(options=#{options},block=#{block}): rackup_warning → #{rackup_warning}")
           warn rackup_warning
           exit 1
         end
@@ -1629,6 +1872,7 @@ module Sinatra
         handler         = Rackup::Handler.pick(server)
         handler_name    = handler.name.gsub(/.*::/, '')
         server_settings = settings.respond_to?(:server_settings) ? settings.server_settings : {}
+		warn("[DEBUG] run!(options=#{options},block=#{block}): handler → #{handler}")
         server_settings.merge!(Port: port, Host: bind)
 
         begin
@@ -1638,6 +1882,7 @@ module Sinatra
           raise
         ensure
           quit!
+		warn("[WARN] <<< Exiting run!(options=#{options},block=#{block})")
         end
       end
 
@@ -1645,11 +1890,13 @@ module Sinatra
 
       # Check whether the self-hosted server is running or not.
       def running?
+		warn("[ERROR] >>> Entering running?()")
         running_server?
       end
 
       # The prototype instance used to process requests.
       def prototype
+		warn("[ERROR] >>> Entering prototype()")
         @prototype ||= new
       end
 
@@ -1668,10 +1915,13 @@ module Sinatra
       # Creates a Rack::Builder instance with all the middleware set up and
       # the given +app+ as end point.
       def build(app)
+		warn("[ERROR] >>> Entering build(app=#{app})")
         builder = Rack::Builder.new
         setup_default_middleware builder
+		warn("[DEBUG] build(app=#{app}): builder → #{builder}")
         setup_middleware builder
         builder.run app
+		warn("[WARN] <<< Exiting build(app=#{app})")
         builder
       end
 
@@ -1682,6 +1932,7 @@ module Sinatra
       # Like Kernel#caller but excluding certain magic entries and without
       # line / method information; the resulting array contains filenames only.
       def caller_files
+		warn("[ERROR] >>> Entering caller_files()")
         cleaned_caller(1).flatten
       end
 
@@ -1689,10 +1940,12 @@ module Sinatra
 
       # Starts the server by running the Rack Handler.
       def start_server(handler, server_settings, handler_name)
+		warn("[ERROR] >>> Entering start_server(handler=#{handler},server_settings=#{server_settings},handler_name=#{handler_name})")
         # Ensure we initialize middleware before startup, to match standard Rack
         # behavior, by ensuring an instance exists:
         prototype
         # Run the instance we created:
+		warn("[WARN] <<< Exiting start_server(handler=#{handler},server_settings=#{server_settings},handler_name=#{handler_name})")
         handler.run(self, **server_settings) do |server|
           unless suppress_messages?
             warn "== Sinatra (v#{Sinatra::VERSION}) has taken the stage on #{port} for #{environment} with backup from #{handler_name}"
@@ -1703,15 +1956,20 @@ module Sinatra
           set :handler_name,   handler_name
           server.threaded = settings.threaded if server.respond_to? :threaded=
           on_start_callback.call unless on_start_callback.nil?
+		warn("[DEBUG] start_server(handler=#{handler},server_settings=#{server_settings},handler_name=#{handler_name}): server.threaded → #{server.threaded}")
           yield server if block_given?
         end
       end
 
       def suppress_messages?
         handler_name =~ /cgi/i || quiet
+		warn("[ERROR] >>> Entering suppress_messages?()")
+        warn("[DEBUG] suppress_messages?(): handler_name → #{handler_name}")
+      warn("[WARN] <<< Exiting suppress_messages?()")
       end
 
       def setup_traps
+		warn("[ERROR] >>> Entering setup_traps()")
         return unless traps?
 
         at_exit { quit! }
@@ -1720,14 +1978,17 @@ module Sinatra
           old_handler = trap(signal) do
             quit!
             old_handler.call if old_handler.respond_to?(:call)
+		warn("[DEBUG] setup_traps(): old_handler → #{old_handler}")
           end
         end
 
+		warn("[WARN] <<< Exiting setup_traps()")
         set :traps, false
       end
 
       # Dynamically defines a method on settings.
       def define_singleton(name, content = Proc.new)
+		warn("[ERROR] >>> Entering define_singleton(name=#{name},content=#{content})")
         singleton_class.class_eval do
           undef_method(name) if method_defined? name
           String === content ? class_eval("def #{name}() #{content}; end") : define_method(name, &content)
@@ -1736,12 +1997,14 @@ module Sinatra
 
       # Condition for matching host name. Parameter might be String or Regexp.
       def host_name(pattern)
+		warn("[ERROR] >>> Entering host_name(pattern=#{pattern})")
         condition { pattern === request.host }
       end
 
       # Condition for matching user agent. Parameter should be Regexp.
       # Will set params[:agent].
       def user_agent(pattern)
+		warn("[ERROR] >>> Entering user_agent(pattern=#{pattern})")
         condition do
           if request.user_agent.to_s =~ pattern
             @params[:agent] = $~[1..-1]
@@ -1755,17 +2018,22 @@ module Sinatra
 
       # Condition for matching mimetypes. Accepts file extensions.
       def provides(*types)
+		warn("[ERROR] >>> Entering provides(types=#{types})")
         types.map! { |t| mime_types(t) }
         types.flatten!
+		warn("[WARN] <<< Exiting provides(types=#{types})")
         condition do
           response_content_type = response['content-type']
+		warn("[DEBUG] provides(types=#{types}): response_content_type → #{response_content_type}")
           preferred_type = request.preferred_type(types)
 
+		warn("[DEBUG] provides(types=#{types}): preferred_type → #{preferred_type}")
           if response_content_type
             types.include?(response_content_type) || types.include?(response_content_type[/^[^;]+/])
           elsif preferred_type
             params = (preferred_type.respond_to?(:params) ? preferred_type.params : {})
             content_type(preferred_type, params)
+			warn("[DEBUG] provides(types=#{types}): params → #{params}")
             true
           else
             false
@@ -1774,49 +2042,64 @@ module Sinatra
       end
 
       def route(verb, path, options = {}, &block)
+		warn("[ERROR] >>> Entering route(verb=#{verb},path=#{path},options=#{options},block=#{block})")
         enable :empty_path_info if path == '' && empty_path_info.nil?
         signature = compile!(verb, path, block, **options)
         (@routes[verb] ||= []) << signature
+		warn("[DEBUG] route(verb=#{verb},path=#{path},options=#{options},block=#{block}): signature → <redacted>")
         invoke_hook(:route_added, verb, path, block)
+		warn("[WARN] <<< Exiting route(verb=#{verb},path=#{path},options=#{options},block=#{block})")
         signature
       end
 
       def invoke_hook(name, *args)
+		warn("[ERROR] >>> Entering invoke_hook(name=#{name},args=#{args})")
         extensions.each { |e| e.send(name, *args) if e.respond_to?(name) }
       end
 
       def generate_method(method_name, &block)
+		warn("[ERROR] >>> Entering generate_method(method_name=#{method_name},block=#{block})")
         define_method(method_name, &block)
         method = instance_method method_name
+		warn("[DEBUG] generate_method(method_name=#{method_name},block=#{block}): method → #{method}")
         remove_method method_name
+		warn("[WARN] <<< Exiting generate_method(method_name=#{method_name},block=#{block})")
         method
       end
 
       def compile!(verb, path, block, **options)
+		warn("[ERROR] >>> Entering compile!(verb=#{verb},path=#{path},block=#{block},options=#{options})")
         # Because of self.options.host
         host_name(options.delete(:host)) if options.key?(:host)
         # Pass Mustermann opts to compile()
         route_mustermann_opts = options.key?(:mustermann_opts) ? options.delete(:mustermann_opts) : {}.freeze
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): route_mustermann_opts → #{route_mustermann_opts}")
 
         options.each_pair { |option, args| send(option, *args) }
 
         pattern                 = compile(path, route_mustermann_opts)
         method_name             = "#{verb} #{path}"
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): pattern → #{pattern}")
         unbound_method          = generate_method(method_name, &block)
         conditions = @conditions
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): unbound_method → #{unbound_method}")
         @conditions = []
         wrapper = block.arity.zero? ?
           proc { |a, _p| unbound_method.bind(a).call } :
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): wrapper → #{wrapper}")
+		warn("[WARN] <<< Exiting compile!(verb=#{verb},path=#{path},block=#{block},options=#{options})")
           proc { |a, p| unbound_method.bind(a).call(*p) }
 
         [pattern, conditions, wrapper]
       end
 
       def compile(path, route_mustermann_opts = {})
+		warn("[ERROR] >>> Entering compile(path=#{path},route_mustermann_opts=#{route_mustermann_opts})")
         Mustermann.new(path, **mustermann_opts.merge(route_mustermann_opts))
       end
 
       def setup_default_middleware(builder)
+		warn("[ERROR] >>> Entering setup_default_middleware(builder=#{builder})")
         builder.use ExtendedRack
         builder.use ShowExceptions       if show_exceptions?
         builder.use Rack::MethodOverride if method_override?
@@ -1824,14 +2107,17 @@ module Sinatra
         setup_logging    builder
         setup_sessions   builder
         setup_protection builder
+		warn("[WARN] <<< Exiting setup_default_middleware(builder=#{builder})")
         setup_host_authorization builder
       end
 
       def setup_middleware(builder)
+		warn("[ERROR] >>> Entering setup_middleware(builder=#{builder})")
         middleware.each { |c, a, b| builder.use(c, *a, &b) }
       end
 
       def setup_logging(builder)
+		warn("[ERROR] >>> Entering setup_logging(builder=#{builder})")
         if logging?
           setup_common_logger(builder)
           setup_custom_logger(builder)
@@ -1841,14 +2127,17 @@ module Sinatra
       end
 
       def setup_null_logger(builder)
+		warn("[ERROR] >>> Entering setup_null_logger(builder=#{builder})")
         builder.use Sinatra::Middleware::Logger, ::Logger::FATAL
       end
 
       def setup_common_logger(builder)
+		warn("[ERROR] >>> Entering setup_common_logger(builder=#{builder})")
         builder.use Sinatra::CommonLogger
       end
 
       def setup_custom_logger(builder)
+		warn("[ERROR] >>> Entering setup_custom_logger(builder=#{builder})")
         if logging.respond_to? :to_int
           builder.use Sinatra::Middleware::Logger, logging
         else
@@ -1857,6 +2146,8 @@ module Sinatra
       end
 
       def setup_protection(builder)
+		warn("[ERROR] >>> Entering setup_protection(builder=#{builder})")
+		__log_start = Time.now
         return unless protection?
 
         options = Hash === protection ? protection.dup : {}
@@ -1864,36 +2155,47 @@ module Sinatra
           img_src: "'self' data:",
           font_src: "'self'"
         }.merge options
+		warn("[DEBUG] setup_protection(builder=#{builder}): options → #{options}")
 
         protect_session = options.fetch(:session) { sessions? }
+		warn("[DEBUG] setup_protection(builder=#{builder}): protect_session → #{protect_session}")
         options[:without_session] = !protect_session
 
         options[:reaction] ||= :drop_session
 
+		warn("[ERROR] setup_protection(builder)=#{builder}: external service call took #{((Time.now - __log_start) * 1000).round} ms")
+        warn("[WARN] <<< Exiting setup_protection(builder=#{builder})")
         builder.use Rack::Protection, options
       end
 
       def setup_host_authorization(builder)
+		warn("[ERROR] >>> Entering setup_host_authorization(builder=#{builder})")
         builder.use Rack::Protection::HostAuthorization, host_authorization
       end
 
       def setup_sessions(builder)
+		warn("[ERROR] >>> Entering setup_sessions(builder=#{builder})")
         return unless sessions?
 
         options = {}
+		warn("[DEBUG] setup_sessions(builder=#{builder}): options → #{options}")
         options[:secret] = session_secret if session_secret?
         options.merge! sessions.to_hash if sessions.respond_to? :to_hash
+		warn("[WARN] <<< Exiting setup_sessions(builder=#{builder})")
         builder.use session_store, options
       end
 
       def inherited(subclass)
+		warn("[ERROR] >>> Entering inherited(subclass=#{subclass})")
         subclass.reset!
         subclass.set :app_file, caller_files.first unless subclass.app_file?
+		warn("[WARN] <<< Exiting inherited(subclass=#{subclass})")
         super
       end
 
       @@mutex = Mutex.new
       def synchronize(&block)
+		warn("[ERROR] >>> Entering synchronize(block=#{block})")
         if lock?
           @@mutex.synchronize(&block)
         else
@@ -1903,11 +2205,13 @@ module Sinatra
 
       # used for deprecation warnings
       def warn_for_deprecation(message)
+		warn("[ERROR] >>> Entering warn_for_deprecation(message=#{message})")
         warn message + "\n\tfrom #{cleaned_caller.first.join(':')}"
       end
 
       # Like Kernel#caller but excluding certain magic entries
       def cleaned_caller(keep = 3)
+		warn("[ERROR] >>> Entering cleaned_caller(keep=#{keep})")
         caller(1)
           .map! { |line| line.split(/:(?=\d|in )/, 3)[0, keep] }
           .reject { |file, *_| callers_to_ignore.any? { |pattern| file =~ pattern } }
@@ -2100,6 +2404,7 @@ module Sinatra
   # at the top-level.
   module Delegator # :nodoc:
     def self.delegate(*methods)
+	warn("[ERROR] >>> Entering delegate(methods=#{methods})")
       methods.each do |method_name|
         next if method_defined?(method_name) || private_method_defined?(method_name)
 
@@ -2128,7 +2433,15 @@ module Sinatra
 
   class Wrapper
     def initialize(stack, instance)
+	warn("[ERROR] >>> Entering initialize(entry=#{entry})")
+        warn("[ERROR] >>> Entering initialize(scheduler=#{scheduler},keep_open=#{keep_open},back=#{back})")
+        warn("[DEBUG] initialize(entry=#{entry}): params → #{params}")
+        warn("[DEBUG] initialize(entry=#{entry}): value → #{value}")
+      warn("[ERROR] >>> Entering initialize()")
+      warn("[ERROR] >>> Entering initialize(app=#{app},_kwargs=#{_kwargs})")
+      warn("[ERROR] >>> Entering initialize(stack=#{stack},instance=#{instance})")
       @stack = stack
+	warn("[WARN] <<< Exiting initialize(stack=#{stack},instance=#{instance})")
       @instance = instance
     end
 
@@ -2145,29 +2458,42 @@ module Sinatra
     end
 
     def inspect
+	warn("[ERROR] >>> Entering inspect()")
       "#<#{@instance.class} app_file=#{settings.app_file.inspect}>"
     end
   end
 
   # Create a new Sinatra application; the block is evaluated in the class scope.
   def self.new(base = Base, &block)
+	warn("[ERROR] >>> Entering new(args=#{args},block=#{block})")
+    warn("[DEBUG] new(args=#{args},block=#{block}): instance → #{instance}")
+        warn("[WARN] <<< Exiting new(args=#{args},block=#{block})")
+	warn("[ERROR] >>> Entering new(base=#{base},block=#{block})")
     base = Class.new(base)
     base.class_eval(&block) if block_given?
+	warn("[WARN] <<< Exiting new(base=#{base},block=#{block})")
     base
   end
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[ERROR] >>> Entering register(extensions=#{extensions},block=#{block})")
+    warn("[DEBUG] register(extensions=#{extensions},block=#{block}): added_methods → #{added_methods}")
+      warn("[WARN] <<< Exiting register(extensions=#{extensions},block=#{block})")
     Delegator.target.register(*extensions, &block)
   end
 
   # Include the helper modules provided in Sinatra's request context.
   def self.helpers(*extensions, &block)
+	warn("[ERROR] >>> Entering helpers(extensions=#{extensions},block=#{block})")
+      warn("[ERROR] >>> Entering helpers()")
     Delegator.target.helpers(*extensions, &block)
   end
 
   # Use the middleware for classic applications.
   def self.use(*args, &block)
+	warn("[ERROR] >>> Entering use(middleware=#{middleware},args=#{args},block=#{block})")
+    warn("[ERROR] >>> Entering use(args=#{args},block=#{block})")
     Delegator.target.use(*args, &block)
   end
 end

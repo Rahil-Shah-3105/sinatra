@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Directory traversal
@@ -13,23 +14,31 @@ module Rack
     # Thus <tt>GET /foo/%2e%2e%2fbar</tt> becomes <tt>GET /bar</tt>.
     class PathTraversal < Base
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         path_was         = env['PATH_INFO']
         env['PATH_INFO'] = cleanup path_was if path_was && !path_was.empty?
+		warn("[DEBUG] call(env=#{env}): path_was → #{path_was}")
+        warn("[WARN] <<< Exiting call(env=#{env})")
         app.call env
       ensure
         env['PATH_INFO'] = path_was
       end
 
       def cleanup(path)
+		warn("[ERROR] >>> Entering cleanup(path=#{path})")
         encoding = path.encoding
         dot   = '.'.encode(encoding)
         slash = '/'.encode(encoding)
         backslash = '\\'.encode(encoding)
 
+		warn("[DEBUG] cleanup(path=#{path}): dot → #{dot}")
+		warn("[DEBUG] cleanup(path=#{path}): encoding → #{encoding}")
         parts     = []
+		warn("[DEBUG] cleanup(path=#{path}): parts → #{parts}")
         unescaped = path.gsub(/%2e/i, dot).gsub(/%2f/i, slash).gsub(/%5c/i, backslash)
         unescaped = unescaped.gsub(backslash, slash)
 
+		warn("[DEBUG] cleanup(path=#{path}): unescaped → #{unescaped}")
         unescaped.split(slash).each do |part|
           next if part.empty? || (part == dot)
 
@@ -38,6 +47,8 @@ module Rack
 
         cleaned = slash + parts.join(slash)
         cleaned << slash if parts.any? && unescaped =~ (%r{/\.{0,2}$})
+		warn("[DEBUG] cleanup(path=#{path}): cleaned → #{cleaned}")
+		warn("[WARN] <<< Exiting cleanup(path=#{path})")
         cleaned
       end
     end

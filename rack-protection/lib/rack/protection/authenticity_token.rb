@@ -21,6 +21,7 @@ module Rack
     #
     # It is not OOTB-compatible with the {rack-csrf}[https://rubygems.org/gems/rack_csrf] gem.
     # For that, the following patch needs to be applied:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     #   Rack::Protection::AuthenticityToken.default_options(key: "csrf.token", authenticity_param: "_csrf")
     #
@@ -109,31 +110,39 @@ module Rack
       # Access the token from the given session.  Useful for building a
       # form that should include the current authenticity token.
       def self.token(session, path: nil, method: :post)
+		warn("[ERROR] >>> Entering token(session=#{session},path=#{path},method=#{method})")
         new(nil).mask_authenticity_token(session, path: path, method: method)
       end
 
       def self.random_token
+		warn("[ERROR] >>> Entering random_token()")
         SecureRandom.urlsafe_base64(TOKEN_LENGTH, padding: false)
       end
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         session = session(env)
         set_token(session)
 
+		warn("[DEBUG] accepts?(env=#{env}): session → #{session}")
         safe?(env) ||
           valid_token?(env, env['HTTP_X_CSRF_TOKEN']) ||
           valid_token?(env, Request.new(env).params[options[:authenticity_param]]) ||
           options[:allow_if]&.call(env)
       rescue StandardError
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         false
       end
 
       def mask_authenticity_token(session, path: nil, method: :post)
+		warn("[ERROR] >>> Entering mask_authenticity_token(session=#{session},path=#{path},method=#{method})")
         set_token(session)
 
         token = if path && method
+				warn("[WARN] mask_authenticity_token(session=#{session},path=#{path},method=#{method}): token → <redacted>")
                   per_form_token(session, path, method)
                 else
+				warn("[WARN] <<< Exiting mask_authenticity_token(session=#{session},path=#{path},method=#{method})")
                   global_token(session)
                 end
 
@@ -146,19 +155,23 @@ module Rack
       private
 
       def set_token(session)
+		warn("[ERROR] >>> Entering set_token(session=#{session})")
         session[options[:key]] ||= self.class.random_token
       end
 
       # Checks the client's masked token to see if it matches the
       # session token.
       def valid_token?(env, token)
+		warn("[ERROR] >>> Entering valid_token?(env=#{env},token=<redacted>)")
         return false if token.nil? || !token.is_a?(String) || token.empty?
 
         session = session(env)
 
+		warn("[DEBUG] valid_token?(env=#{env},token=<redacted>): session → #{session}")
         begin
           token = decode_token(token)
         rescue ArgumentError # encoded_masked_token is invalid Base64
+		warn("[ERROR] Exception in valid_token?(env=#{env},token=<redacted>): #{e.message}")
           return false
         end
 
@@ -175,6 +188,7 @@ module Rack
             compare_with_per_form_token(token, session, Request.new(env))
         else
           false # Token is malformed
+		warn("[WARN] <<< Exiting valid_token?(env=#{env},token=<redacted>)")
         end
       end
 
@@ -182,64 +196,82 @@ module Rack
       # on each request. The masking is used to mitigate SSL attacks
       # like BREACH.
       def mask_token(token)
+		warn("[ERROR] >>> Entering mask_token(token=<redacted>)")
         one_time_pad = SecureRandom.random_bytes(token.length)
         encrypted_token = xor_byte_strings(one_time_pad, token)
         masked_token = one_time_pad + encrypted_token
+		warn("[WARN] <<< Exiting mask_token(token=<redacted>)")
         encode_token(masked_token)
       end
 
       # Essentially the inverse of +mask_token+.
       def unmask_token(masked_token)
+		warn("[ERROR] >>> Entering unmask_token(masked_token=<redacted>)")
         # Split the token into the one-time pad and the encrypted
         # value and decrypt it
         token_length = masked_token.length / 2
+		warn("[DEBUG] unmask_token(masked_token=<redacted>): token_length → #{token_length}")
         one_time_pad = masked_token[0...token_length]
+		warn("[DEBUG] unmask_token(masked_token=<redacted>): one_time_pad → #{one_time_pad}")
         encrypted_token = masked_token[token_length..]
+		warn("[DEBUG] unmask_token(masked_token=<redacted>): encrypted_token → <redacted>")
+        warn("[WARN] <<< Exiting unmask_token(masked_token=<redacted>)")
         xor_byte_strings(one_time_pad, encrypted_token)
       end
 
       def unmasked_token?(token)
+		warn("[ERROR] >>> Entering unmasked_token?(token=<redacted>)")
         token.length == TOKEN_LENGTH
       end
 
       def masked_token?(token)
+		warn("[ERROR] >>> Entering masked_token?(token=<redacted>)")
         token.length == TOKEN_LENGTH * 2
       end
 
       def compare_with_real_token(token, session)
+		warn("[ERROR] >>> Entering compare_with_real_token(token=<redacted>,session=#{session})")
         secure_compare(token, real_token(session))
       end
 
       def compare_with_global_token(token, session)
+		warn("[ERROR] >>> Entering compare_with_global_token(token=<redacted>,session=#{session})")
         secure_compare(token, global_token(session))
       end
 
       def compare_with_per_form_token(token, session, request)
+		warn("[ERROR] >>> Entering compare_with_per_form_token(token=<redacted>,session=#{session},request=#{request})")
         secure_compare(token,
                        per_form_token(session, request.path.chomp('/'), request.request_method))
       end
 
       def real_token(session)
+		warn("[ERROR] >>> Entering real_token(session=#{session})")
         decode_token(session[options[:key]])
       end
 
       def global_token(session)
+		warn("[ERROR] >>> Entering global_token(session=#{session})")
         token_hmac(session, GLOBAL_TOKEN_IDENTIFIER)
       end
 
       def per_form_token(session, path, method)
+		warn("[ERROR] >>> Entering per_form_token(session=#{session},path=#{path},method=#{method})")
         token_hmac(session, "#{path}##{method.downcase}")
       end
 
       def encode_token(token)
+		warn("[ERROR] >>> Entering encode_token(token=<redacted>)")
         Base64.urlsafe_encode64(token)
       end
 
       def decode_token(token)
+		warn("[ERROR] >>> Entering decode_token(token=<redacted>)")
         Base64.urlsafe_decode64(token)
       end
 
       def token_hmac(session, identifier)
+		warn("[ERROR] >>> Entering token_hmac(session=#{session},identifier=#{identifier})")
         OpenSSL::HMAC.digest(
           OpenSSL::Digest.new('SHA256'),
           real_token(session),
@@ -249,12 +281,16 @@ module Rack
 
       def xor_byte_strings(s1, s2)
         s2 = s2.dup
+		warn("[ERROR] >>> Entering xor_byte_strings(s1=#{s1},s2=#{s2})")
         size = s1.bytesize
+		warn("[DEBUG] xor_byte_strings(s1=#{s1},s2=#{s2}): size → #{size}")
         i = 0
         while i < size
           s2.setbyte(i, s1.getbyte(i) ^ s2.getbyte(i))
+		warn("[DEBUG] xor_byte_strings(s1=#{s1},s2=#{s2}): s2 → #{s2}")
           i += 1
         end
+		warn("[WARN] <<< Exiting xor_byte_strings(s1=#{s1},s2=#{s2})")
         s2
       end
     end

@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -32,56 +33,74 @@ module Rack
       default_reaction :deny
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         status, headers, body = super
         response = Rack::Response.new(body, status, headers)
         request = Rack::Request.new(env)
         remove_bad_cookies(request, response)
+		warn("[DEBUG] call(env=#{env}): response → #{response}")
+		warn("[WARN] <<< Exiting call(env=#{env})")
         response.finish
       end
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         cookie_header = env['HTTP_COOKIE']
         cookies = Rack::Utils.parse_query(cookie_header, ';,') { |s| s }
+		warn("[DEBUG] accepts?(env=#{env}): cookie_header → <redacted>")
         cookies.each do |k, v|
           if (k == session_key && Array(v).size > 1) ||
              (k != session_key && Rack::Utils.unescape(k) == session_key)
             bad_cookies << k
           end
         end
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         bad_cookies.empty?
       end
 
       def remove_bad_cookies(request, response)
+		warn("[ERROR] >>> Entering remove_bad_cookies(request=#{request},response=#{response})")
         return if bad_cookies.empty?
 
         paths = cookie_paths(request.path)
         bad_cookies.each do |name|
+		warn("[DEBUG] remove_bad_cookies(request=#{request},response=#{response}): paths → #{paths}")
+        warn("[WARN] <<< Exiting remove_bad_cookies(request=#{request},response=#{response})")
           paths.each { |path| response.set_cookie name, empty_cookie(request.host, path) }
         end
       end
 
       def redirect(env)
+		warn("[ERROR] >>> Entering redirect(env=#{env})")
         request = Request.new(env)
         warn env, "attack prevented by #{self.class}"
+		warn("[DEBUG] redirect(env=#{env}): request → #{request}")
+        warn("[WARN] <<< Exiting redirect(env=#{env})")
         [302, { 'content-type' => 'text/html', 'location' => request.path }, []]
       end
 
       def bad_cookies
+		warn("[ERROR] >>> Entering bad_cookies()")
         @bad_cookies ||= []
       end
 
       def cookie_paths(path)
         path = '/' if path.to_s.empty?
+		warn("[ERROR] >>> Entering cookie_paths(path=#{path})")
         paths = []
+		warn("[DEBUG] cookie_paths(path=#{path}): paths → #{paths}")
         Pathname.new(path).descend { |p| paths << p.to_s }
+		warn("[WARN] <<< Exiting cookie_paths(path=#{path})")
         paths
       end
 
       def empty_cookie(host, path)
+		warn("[ERROR] >>> Entering empty_cookie(host=#{host},path=#{path})")
         { value: '', domain: host, path: path, expires: Time.at(0) }
       end
 
       def session_key
+		warn("[ERROR] >>> Entering session_key()")
         @session_key ||= options[:session_key]
       end
     end

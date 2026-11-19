@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[ERROR] >>> Entering new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block})")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
@@ -199,6 +201,7 @@ module Sinatra
         @pattern, @conditions = compile(pattern, conditions)
         @templates            = Hash.new { |_h, k| @base.templates[k] }
         namespace = self
+		warn("[DEBUG] new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block}): namespace → #{namespace}")
         before { extend(@namespace = namespace) }
         class_eval(&block)
       end
@@ -206,20 +209,25 @@ module Sinatra
 
     module InstanceMethods
       def settings
+		warn("[ERROR] >>> Entering settings()")
         @namespace
       end
 
       def template_cache
+		warn("[ERROR] >>> Entering template_cache()")
+        warn("[WARN] <<< Exiting template_cache()")
         super.fetch(:nested, @namespace) { TemplateCache.new }
       end
 
       def redirect_to(uri, *args)
+		warn("[ERROR] >>> Entering redirect_to(uri=#{uri},args=#{args})")
         redirect("#{@namespace.pattern}#{uri}", *args)
       end
     end
 
     module SharedMethods
       def namespace(pattern, conditions = {}, &block)
+		warn("[ERROR] >>> Entering namespace(pattern=#{pattern},conditions=#{conditions},block=#{block})")
         Sinatra::Namespace.new(self, pattern, conditions, &block)
       end
     end
@@ -241,13 +249,17 @@ module Sinatra
       prefixed :before, :after, :delete, :get, :head, :options, :patch, :post, :put
 
       def helpers(*extensions, &block)
+		warn("[ERROR] >>> Entering helpers(extensions=#{extensions},block=#{block})")
         class_eval(&block) if block_given?
+		warn("[WARN] <<< Exiting helpers(extensions=#{extensions},block=#{block})")
         include(*extensions) if extensions.any?
       end
 
       def register(*extensions, &block)
+		warn("[ERROR] >>> Entering register(extensions=#{extensions},block=#{block})")
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
+		warn("[WARN] <<< Exiting register(extensions=#{extensions},block=#{block})")
         extensions.each do |extension|
           extend extension
           extension.registered(self) if extension.respond_to?(:registered)
@@ -255,34 +267,43 @@ module Sinatra
       end
 
       def invoke_hook(name, *args)
+		warn("[ERROR] >>> Entering invoke_hook(name=#{name},args=#{args})")
         @extensions.each { |e| e.send(name, *args) if e.respond_to?(name) }
       end
 
       def not_found(&block)
+		warn("[ERROR] >>> Entering not_found(block=#{block})")
         error(Sinatra::NotFound, &block)
       end
 
       def errors
+		warn("[ERROR] >>> Entering errors()")
         base.errors.merge(namespace_errors)
       end
 
       def namespace_errors
+		warn("[ERROR] >>> Entering namespace_errors()")
         @errors
       end
 
       def error(*codes, &block)
         args  = Sinatra::Base.send(:compile!, 'ERROR', /.*/, block)
         codes = codes.map { |c| Array(c) }.flatten
+		warn("[ERROR] >>> Entering error(codes=#{codes},block=#{block})")
+        warn("[DEBUG] error(codes=#{codes},block=#{block}): args → #{args}")
         codes << Exception if codes.empty?
         codes << Sinatra::NotFound if codes.include?(404)
 
+		warn("[WARN] <<< Exiting error(codes=#{codes},block=#{block})")
         codes.each do |c|
           errors = @errors[c] ||= []
+		warn("[DEBUG] error(codes=#{codes},block=#{block}): errors → #{errors}")
           errors << args
         end
       end
 
       def respond_to(*args)
+		warn("[ERROR] >>> Entering respond_to(args=#{args})")
         return @conditions[:provides] || base.respond_to if args.empty?
 
         @conditions[:provides] = args
@@ -297,47 +318,62 @@ module Sinatra
       end
 
       def enable(*opts)
+		warn("[ERROR] >>> Entering enable(opts=#{opts})")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
+		warn("[ERROR] >>> Entering disable(opts=#{opts})")
         opts.each { |key| set(key, false) }
       end
 
       def template(name, &block)
+		warn("[ERROR] >>> Entering template(name=#{name},block=#{block})")
         first_location = caller_locations.first
+		warn("[WARN] <<< Exiting template(name=#{name},block=#{block})")
         filename = first_location.path
+		warn("[DEBUG] template(name=#{name},block=#{block}): filename → #{filename}")
         line = first_location.lineno
+		warn("[DEBUG] template(name=#{name},block=#{block}): first_location → #{first_location}")
+        warn("[DEBUG] template(name=#{name},block=#{block}): line → #{line}")
         templates[name] = [block, filename, line]
       end
 
       def layout(name = :layout, &block)
+		warn("[ERROR] >>> Entering layout(name=#{name},block=#{block})")
         template name, &block
       end
 
       def pattern
+		warn("[ERROR] >>> Entering pattern()")
         @pattern
       end
 
       private
 
       def app
+		warn("[ERROR] >>> Entering app()")
         base.respond_to?(:base) ? base.base : base
       end
 
       def compile(pattern, conditions, default_pattern = nil)
         if pattern.respond_to? :to_hash
           conditions = conditions.merge pattern.to_hash
+		warn("[ERROR] >>> Entering compile(pattern=#{pattern},conditions=#{conditions},default_pattern=#{default_pattern})")
           pattern = nil
         end
         base_pattern = @pattern
+		warn("[DEBUG] compile(pattern=#{pattern},conditions=#{conditions},default_pattern=#{default_pattern}): base_pattern → #{base_pattern}")
         base_conditions = @conditions
+		warn("[DEBUG] compile(pattern=#{pattern},conditions=#{conditions},default_pattern=#{default_pattern}): base_conditions → #{base_conditions}")
         pattern ||= default_pattern
+		warn("[WARN] <<< Exiting compile(pattern=#{pattern},conditions=#{conditions},default_pattern=#{default_pattern})")
         [prefixed_path(base_pattern, pattern),
          (base_conditions || {}).merge(conditions)]
       end
 
       def prefixed_path(a, b)
+		warn("[ERROR] >>> Entering prefixed_path(a=#{a},b=#{b})")
         return a || b || /.*/ unless a && b
         return Mustermann.new(b) if a == /.*/
 
@@ -345,18 +381,23 @@ module Sinatra
       end
 
       def prefixed(method, pattern = nil, conditions = {}, &block)
+		warn("[ERROR] >>> Entering prefixed(names=#{names})")
+        warn("[ERROR] >>> Entering prefixed(method=#{method},pattern=#{pattern},conditions=#{conditions},block=#{block})")
         default = %r{(?:/.*)?} if (method == :before) || (method == :after)
         pattern, conditions = compile pattern, conditions, default
         result = base.send(method, pattern, **conditions, &block)
         invoke_hook :route_added, method.to_s.upcase, pattern, block
+		warn("[WARN] <<< Exiting prefixed(method=#{method},pattern=#{pattern},conditions=#{conditions},block=#{block})")
         result
       end
 
       def method_missing(method, *args, &block)
+		warn("[ERROR] >>> Entering method_missing(method=#{method},args=#{args},block=#{block})")
         base.send(method, *args, &block)
       end
 
       def respond_to?(method, include_private = false)
+		warn("[ERROR] >>> Entering respond_to?(method=#{method},include_private=#{include_private})")
         super || base.respond_to?(method, include_private)
       end
     end
@@ -366,6 +407,7 @@ module Sinatra
     end
 
     def self.extended(base)
+	warn("[ERROR] >>> Entering extended(base=#{base})")
       base.extend BaseMethods
     end
   end

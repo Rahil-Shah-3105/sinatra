@@ -22,6 +22,7 @@ module Rack
     # == Options
     #
     # [<tt>:escape</tt>] What escaping modes to use. Should be Symbol or Array of Symbols of one of the following:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                    <tt>:html</tt>:: escape HTML
     #                    <tt>:url</tt>:: escape URLs
     #                    <tt>:javascript</tt>:: escape JavaScript (requires the <tt>escape_utils</tt>
@@ -79,25 +80,33 @@ module Rack
                       escaper: defined?(EscapeUtils) ? EscapeUtils : self
 
       def initialize(*)
+		warn("[ERROR] >>> Entering initialize()")
         super
 
         modes       = Array options[:escape]
+		warn("[DEBUG] initialize(): modes → #{modes}")
         @escaper    = options[:escaper]
         @html       = modes.include? :html
         @javascript = modes.include? :javascript
         @url        = modes.include? :url
 
+		warn("[ERROR] Throwing exception from initialize()")
+        warn("[WARN] <<< Exiting initialize()")
         return unless @javascript && (!@escaper.respond_to? :escape_javascript)
 
         raise('Use EscapeUtils for JavaScript escaping.')
       end
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         request  = Request.new(env)
         get_was  = handle(request.GET)
         post_was = begin
+		warn("[DEBUG] call(env=#{env}): get_was → #{get_was}")
           handle(request.POST)
         rescue StandardError
+		warn("[ERROR] Exception in call(env=#{env}): #{e.message}")
+		warn("[WARN] <<< Exiting call(env=#{env})")
           nil
         end
         app.call env
@@ -107,12 +116,16 @@ module Rack
       end
 
       def handle(hash)
+		warn("[ERROR] >>> Entering handle(hash=<redacted>)")
         was = hash.dup
         hash.replace escape(hash)
+		warn("[DEBUG] handle(hash=<redacted>): was → #{was}")
+        warn("[WARN] <<< Exiting handle(hash=<redacted>)")
         was
       end
 
       def escape(object)
+		warn("[ERROR] >>> Entering escape(object=#{object})")
         case object
         when Hash   then escape_hash(object)
         when Array  then object.map { |o| escape(o) }
@@ -122,15 +135,19 @@ module Rack
       end
 
       def escape_hash(hash)
+		warn("[ERROR] >>> Entering escape_hash(hash=<redacted>)")
         hash = hash.dup
         hash.each { |k, v| hash[k] = escape(v) }
+		warn("[WARN] <<< Exiting escape_hash(hash=<redacted>)")
         hash
       end
 
       def escape_string(str)
         str = @escaper.escape_url(str)        if @url
+		warn("[ERROR] >>> Entering escape_string(str=#{str})")
         str = @escaper.escape_html(str)       if @html
         str = @escaper.escape_javascript(str) if @javascript
+		warn("[WARN] <<< Exiting escape_string(str=#{str})")
         str
       end
     end

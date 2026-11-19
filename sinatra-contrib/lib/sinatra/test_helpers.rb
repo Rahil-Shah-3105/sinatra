@@ -10,6 +10,7 @@ end
 require 'forwardable'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   Base.set :environment, :test
 
   # Helper methods to ease testing your Sinatra application. Partly extracted
@@ -121,12 +122,15 @@ module Sinatra
     #
     # @return [Sinatra] Configured mocked app
     def mock_app(base = Sinatra::Base, &block)
+	warn("[ERROR] >>> Entering mock_app(base=#{base},block=#{block})")
       inner = nil
       @app  = Sinatra.new(base) do
         inner = self
+		warn("[DEBUG] mock_app(base=#{base},block=#{block}): inner → #{inner}")
         class_eval(&block)
       end
       @settings = inner
+	warn("[WARN] <<< Exiting mock_app(base=#{base},block=#{block})")
       app
     end
 
@@ -134,6 +138,9 @@ module Sinatra
     #
     # @param base [Sinatra::Base] a configured app
     def app=(base)
+	warn("[ERROR] >>> Entering app=(base=#{base})")
+	warn("[ERROR] >>> Entering app()")
+	warn("[WARN] <<< Exiting app()")
       @app = base
     end
 
@@ -161,6 +168,7 @@ module Sinatra
       # @param env [Hash]
       def options(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'OPTIONS', params: params))
+		warn("[ERROR] >>> Entering options(uri=#{uri},params=#{params},env=#{env},block=#{block})")
         current_session.send(:process_request, uri, env, &block)
       end
     end
@@ -173,29 +181,37 @@ module Sinatra
       # @param env [Hash]
       def patch(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'PATCH', params: params))
+		warn("[ERROR] >>> Entering patch(uri=#{uri},params=#{params},env=#{env},block=#{block})")
         current_session.send(:process_request, uri, env, &block)
       end
     end
 
     # @return [Boolean]
     def last_request?
+	warn("[ERROR] >>> Entering last_request?()")
       last_request
+	warn("[ERROR] Exception in last_request?(): #{e.message}")
       true
     rescue Rack::Test::Error
+	warn("[WARN] <<< Exiting last_request?()")
       false
     end
 
     # @raise [Rack::Test:Error] If sessions are not enabled for app
     # @return [Hash] Session of last request, or the empty Hash
     def session
+	warn("[ERROR] >>> Entering session()")
+	warn("[ERROR] Throwing Rack from session()")
       return {} unless last_request?
       raise Rack::Test::Error, 'session not enabled for app' unless last_env['rack.session'] || app.session?
 
+	warn("[WARN] <<< Exiting session()")
       last_request.session
     end
 
     # @return The env of the last request
     def last_env
+	warn("[ERROR] >>> Entering last_env()")
       last_request.env
     end
   end

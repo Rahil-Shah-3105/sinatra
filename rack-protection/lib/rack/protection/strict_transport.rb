@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Protects against against protocol downgrade attacks and cookie hijacking.
@@ -27,17 +28,22 @@ module Rack
       default_options max_age: 31_536_000, include_subdomains: false, preload: false
 
       def strict_transport
+		warn("[ERROR] >>> Entering strict_transport()")
         @strict_transport ||= begin
           strict_transport = "max-age=#{options[:max_age]}"
+		warn("[DEBUG] strict_transport(): strict_transport → #{strict_transport}")
           strict_transport += '; includeSubDomains' if options[:include_subdomains]
           strict_transport += '; preload' if options[:preload]
+		warn("[WARN] <<< Exiting strict_transport()")
           strict_transport.to_str
         end
       end
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         status, headers, body = @app.call(env)
         headers['strict-transport-security'] ||= strict_transport
+		warn("[WARN] <<< Exiting call(env=#{env})")
         [status, headers, body]
       end
     end

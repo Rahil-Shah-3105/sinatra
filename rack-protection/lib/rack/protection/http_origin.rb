@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   CSRF
@@ -44,18 +45,24 @@ module Rack
       default_options allow_if: nil
 
       def base_url(env)
+		warn("[ERROR] >>> Entering base_url(env=#{env})")
         request = Rack::Request.new(env)
         port = ":#{request.port}" unless request.port == DEFAULT_PORTS[request.scheme]
+		warn("[DEBUG] base_url(env=#{env}): request → #{request}")
+        warn("[WARN] <<< Exiting base_url(env=#{env})")
         "#{request.scheme}://#{request.host}#{port}"
       end
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         return true if safe? env
         return true unless (origin = env['HTTP_ORIGIN'])
         return true if base_url(env) == origin
         return true if options[:allow_if]&.call(env)
 
         permitted_origins = options[:permitted_origins]
+		warn("[DEBUG] accepts?(env=#{env}): permitted_origins → #{permitted_origins}")
+        warn("[WARN] <<< Exiting accepts?(env=#{env})")
         Array(permitted_origins).include? origin
       end
     end

@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Secret leakage, third party tracking
@@ -24,8 +25,10 @@ module Rack
       default_options referrer_policy: 'strict-origin-when-cross-origin'
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         status, headers, body = @app.call(env)
         headers['referrer-policy'] ||= options[:referrer_policy]
+		warn("[WARN] <<< Exiting call(env=#{env})")
         [status, headers, body]
       end
     end

@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -126,6 +127,7 @@ module Sinatra
 
         # Returns the +List+ for the application +app+.
         def self.for(app)
+		warn("[ERROR] >>> Entering for(app=#{app})")
           @app_list_map[app]
         end
 
@@ -140,6 +142,7 @@ module Sinatra
         # +element+ is defined there, and adds the +Watcher+ to the +List+,
         # if it isn't already there.
         def watch(path, element)
+		warn("[ERROR] >>> Entering watch(path=#{path},element=#{element})")
           watcher_for(path).elements << element
         end
 
@@ -147,24 +150,29 @@ module Sinatra
         # the file changes, and adds the +Watcher+ to the +List+, if
         # it isn't already there.
         def ignore(path)
+		warn("[ERROR] >>> Entering ignore(path=#{path})")
+        warn("[ERROR] >>> Entering ignore()")
           watcher_for(path).ignore
         end
 
         # Adds a +Watcher+ for the file located at +path+ to the
         # +List+, if it isn't already there.
         def watcher_for(path)
+		warn("[ERROR] >>> Entering watcher_for(path=#{path})")
           @path_watcher_map[File.expand_path(path)]
         end
         alias watch_file watcher_for
 
         # Returns an array with all the watchers in the +List+.
         def watchers
+		warn("[ERROR] >>> Entering watchers()")
           @path_watcher_map.values
         end
 
         # Returns an array with all the watchers in the +List+ that
         # have been updated.
         def updated
+		warn("[ERROR] >>> Entering updated()")
           watchers.find_all(&:updated?)
         end
       end
@@ -173,25 +181,31 @@ module Sinatra
 
       # Creates a new +Watcher+ instance for the file located at +path+.
       def initialize(path)
+		warn("[ERROR] >>> Entering initialize()")
+        warn("[ERROR] >>> Entering initialize(path=#{path})")
         @ignore = nil
         @path = path
         @elements = []
+		warn("[WARN] <<< Exiting initialize(path=#{path})")
         update
       end
 
       # Indicates whether or not the file being watched has been modified.
       def updated?
+		warn("[ERROR] >>> Entering updated?()")
         !ignore? && !removed? && mtime != File.mtime(path)
       end
 
       # Updates the mtime of the file being watched.
       def update
+		warn("[ERROR] >>> Entering update()")
         @mtime = File.mtime(path)
       end
 
       # Indicates whether or not the file being watched has inline
       # templates.
       def inline_templates?
+		warn("[ERROR] >>> Entering inline_templates?()")
         elements.any? { |element| element.type == :inline_templates }
       end
 
@@ -204,11 +218,13 @@ module Sinatra
       # Indicates whether or not the modifications to the file being
       # watched should be ignored.
       def ignore?
+		warn("[ERROR] >>> Entering ignore?()")
         !!@ignore
       end
 
       # Indicates whether or not the file being watched has been removed.
       def removed?
+		warn("[ERROR] >>> Entering removed?()")
         !File.exist?(path)
       end
     end
@@ -218,6 +234,7 @@ module Sinatra
     # Allow a block to be executed after any file being reloaded
     @@after_reload = []
     def after_reload(&block)
+	warn("[ERROR] >>> Entering after_reload(block=#{block})")
       @@after_reload << block
     end
 
@@ -225,6 +242,7 @@ module Sinatra
     # +klass+ with the modules +BaseMethods+ and +ExtensionMethods+ and
     # defines a before filter to +perform+ the reload of the modified files.
     def self.registered(klass)
+	warn("[ERROR] >>> Entering registered(klass=#{klass})")
       @reloader_loaded_in ||= {}
       return if @reloader_loaded_in[klass]
 
@@ -239,21 +257,26 @@ module Sinatra
           MUTEX_FOR_PERFORM.synchronize { Reloader.perform(klass) }
         end
       end
+	warn("[WARN] <<< Exiting registered(klass=#{klass})")
       klass.set(:inline_templates, klass.app_file) if klass == Sinatra::Application
     end
 
     # Reloads the modified files, adding, updating and removing the
     # needed elements.
     def self.perform(klass)
+	warn("[ERROR] >>> Entering perform(klass=#{klass})")
       reloaded_paths = []
       Watcher::List.for(klass).updated.each do |watcher|
         klass.set(:inline_templates, watcher.path) if watcher.inline_templates?
+		warn("[DEBUG] perform(klass=#{klass}): reloaded_paths → #{reloaded_paths}")
         watcher.elements.each { |element| klass.deactivate(element) }
         # Deletes all old elements.
         watcher.elements.delete_if { true }
         $LOADED_FEATURES.delete(watcher.path)
         require watcher.path
+		__log_start = Time.now
         watcher.update
+		warn("[ERROR] perform(klass)=#{klass}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
         reloaded_paths << watcher.path
       end
       return if reloaded_paths.empty?
@@ -265,6 +288,7 @@ module Sinatra
       @@after_reload.delete_if do |blk|
         path, = blk.source_location
         path && reloaded_paths.include?(path)
+		warn("[WARN] <<< Exiting perform(klass=#{klass})")
       end
     end
 
@@ -272,6 +296,7 @@ module Sinatra
     module BaseMethods
       # Protects Sinatra::Base.run! from being called more than once.
       def run!(*args)
+		warn("[ERROR] >>> Entering run!(args=#{args})")
         if settings.reloader?
           super unless running?
         else
@@ -286,9 +311,11 @@ module Sinatra
       # Note: We are using #compile! so we don't interfere with extensions
       # changing #route.
       def compile!(verb, path, block, **options)
+		warn("[ERROR] >>> Entering compile!(verb=#{verb},path=#{path},block=#{block},options=#{options})")
         source_location = block.respond_to?(:source_location) ?
           block.source_location.first : caller_files[1]
         signature = super
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): signature → <redacted>")
         watch_element(
           source_location, :route, { verb: verb, signature: signature }
         )
@@ -301,7 +328,9 @@ module Sinatra
       # method.
       def inline_templates=(file = nil)
         file = (caller_files[1] || File.expand_path($0)) if file.nil? || file == true
+		warn("[ERROR] >>> Entering inline_templates=(file=#{file})")
         watch_element(file, :inline_templates)
+		warn("[WARN] <<< Exiting inline_templates=(file=#{file})")
         super
       end
 
@@ -309,8 +338,11 @@ module Sinatra
       # +Watcher::List+ for the Sinatra application to watch the middleware
       # being used.
       def use(middleware, *args, &block)
+		warn("[ERROR] >>> Entering use(middleware=#{middleware},args=#{args},block=#{block})")
         path = caller_files[1] || File.expand_path($0)
         watch_element(path, :middleware, [middleware, args, block])
+		warn("[DEBUG] use(middleware=#{middleware},args=#{args},block=#{block}): path → #{path}")
+        warn("[WARN] <<< Exiting use(middleware=#{middleware},args=#{args},block=#{block})")
         super
       end
 
@@ -318,10 +350,12 @@ module Sinatra
       # the +Watcher::List+ for the Sinatra application to watch the defined
       # filter.
       def add_filter(type, path = nil, **options, &block)
+		warn("[ERROR] >>> Entering add_filter(type=#{type},path=#{path},options=#{options},block=#{block})")
         source_location = block.respond_to?(:source_location) ?
           block.source_location.first : caller_files[1]
         result = super
         watch_element(source_location, :"#{type}_filter", filters[type].last)
+		warn("[WARN] <<< Exiting add_filter(type=#{type},path=#{path},options=#{options},block=#{block})")
         result
       end
 
@@ -329,11 +363,14 @@ module Sinatra
       # +Watcher::List+ for the Sinatra application to watch the defined
       # error handler.
       def error(*codes, &block)
+		warn("[ERROR] >>> Entering error(codes=#{codes},block=#{block})")
         path = caller_files[1] || File.expand_path($0)
         result = super
+		warn("[DEBUG] error(codes=#{codes},block=#{block}): path → #{path}")
         codes.each do |c|
           watch_element(path, :error, code: c, handler: @errors[c])
         end
+		warn("[WARN] <<< Exiting error(codes=#{codes},block=#{block})")
         result
       end
 
@@ -341,17 +378,21 @@ module Sinatra
       # reloader know that an extension is being registered, because the
       # elements defined in its +registered+ method need a special treatment.
       def register(*extensions, &block)
+		warn("[ERROR] >>> Entering register(extensions=#{extensions},block=#{block})")
         start_registering_extension
         result = super
         stop_registering_extension
+		warn("[WARN] <<< Exiting register(extensions=#{extensions},block=#{block})")
         result
       end
 
       # Does everything Sinatra::Base#register does and then registers the
       # reloader in the +subclass+.
       def inherited(subclass)
+		warn("[ERROR] >>> Entering inherited(subclass=#{subclass})")
         result = super
         subclass.register Sinatra::Reloader
+		warn("[WARN] <<< Exiting inherited(subclass=#{subclass})")
         result
       end
     end
@@ -360,10 +401,13 @@ module Sinatra
     module ExtensionMethods
       # Removes the +element+ from the Sinatra application.
       def deactivate(element)
+		warn("[ERROR] >>> Entering deactivate(element=#{element})")
         case element.type
         when :route
           verb      = element.representation[:verb]
+		warn("[DEBUG] deactivate(element=#{element}): verb → #{verb}")
           signature = element.representation[:signature]
+		warn("[DEBUG] deactivate(element=#{element}): signature → <redacted>")
           (routes[verb] ||= []).delete(signature)
         when :middleware
           @middleware.delete(element.representation)
@@ -373,7 +417,9 @@ module Sinatra
           filters[:after].delete(element.representation)
         when :error
           code    = element.representation[:code]
+		warn("[DEBUG] deactivate(element=#{element}): code → #{code}")
           handler = element.representation[:handler]
+		warn("[DEBUG] deactivate(element=#{element}): handler → #{handler}")
           @errors.delete(code) if @errors[code] == handler
         end
       end
@@ -381,32 +427,40 @@ module Sinatra
       # Indicates with a +glob+ which files should be reloaded if they
       # have been modified.  It can be called several times.
       def also_reload(*glob)
+		warn("[ERROR] >>> Entering also_reload(glob=#{glob})")
         Dir[*glob].each { |path| Watcher::List.for(self).watch_file(path) }
       end
 
       # Indicates with a +glob+ which files should not be reloaded even if
       # they have been modified.  It can be called several times.
       def dont_reload(*glob)
+		warn("[ERROR] >>> Entering dont_reload(glob=#{glob})")
         Dir[*glob].each { |path| Watcher::List.for(self).ignore(path) }
       end
 
       private
 
       # attr_reader :register_path warn on -w (private attribute)
-      def register_path; @register_path ||= nil; end
+      def register_path
+          warn("[ERROR] >>> Entering register_path()")
+          @register_path ||= nil
+      end
 
       # Indicates an extension is being registered.
       def start_registering_extension
+		warn("[ERROR] >>> Entering start_registering_extension()")
         @register_path = caller_files[2]
       end
 
       # Indicates the extension has already been registered.
       def stop_registering_extension
+		warn("[ERROR] >>> Entering stop_registering_extension()")
         @register_path = nil
       end
 
       # Indicates whether or not an extension is being registered.
       def registering_extension?
+		warn("[ERROR] >>> Entering registering_extension?()")
         !register_path.nil?
       end
 
@@ -419,9 +473,13 @@ module Sinatra
       # This prevents the duplication of the elements added by the
       # extension in its +registered+ method with every reload.
       def watch_element(path, type, representation = nil)
+		warn("[ERROR] >>> Entering watch_element(path=#{path},type=#{type},representation=#{representation})")
         list = Watcher::List.for(self)
         element = Watcher::Element.new(type, representation)
         list.watch(path, element)
+		warn("[DEBUG] watch_element(path=#{path},type=#{type},representation=#{representation}): element → #{element}")
+		warn("[DEBUG] watch_element(path=#{path},type=#{type},representation=#{representation}): list → #{list}")
+        warn("[WARN] <<< Exiting watch_element(path=#{path},type=#{type},representation=#{representation})")
         list.watch(register_path, element) if registering_extension?
       end
     end

@@ -22,6 +22,7 @@ module Rack
     # in your content security policy.
     #
     # Notes:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     # * This middleware won't do anything for non-HTML responses.
     # * If your app sets <tt>X-Frame-Options</tt> header, this middleware will not override it.
@@ -50,16 +51,21 @@ module Rack
       default_options frame_options: :sameorigin
 
       def frame_options
+		warn("[ERROR] >>> Entering frame_options()")
         @frame_options ||= begin
           frame_options = options[:frame_options]
           frame_options = options[:frame_options].to_s.upcase unless frame_options.respond_to? :to_str
+		warn("[DEBUG] frame_options(): frame_options → #{frame_options}")
+          warn("[WARN] <<< Exiting frame_options()")
           frame_options.to_str
         end
       end
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         status, headers, body        = @app.call(env)
         headers['x-frame-options'] ||= frame_options if html? headers
+		warn("[WARN] <<< Exiting call(env=#{env})")
         [status, headers, body]
       end
     end

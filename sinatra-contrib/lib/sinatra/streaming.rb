@@ -29,6 +29,7 @@ module Sinatra
   # Blocks passed to #map! or #map will actually be applied when streaming
   # takes place (as you might have suspected, #map! applies modifications
   # to the current body, while #map creates a new one):
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   class StupidMiddleware
   #     def initialize(app) @app = app end
@@ -77,10 +78,14 @@ module Sinatra
   #   end
   module Streaming
     def stream(*)
+	warn("[ERROR] >>> Entering stream()")
       stream = super
       stream.extend Stream
+	warn("[DEBUG] stream(): stream → #{stream}")
       stream.app = self
+	warn("[DEBUG] stream(): stream.app → #{stream.app}")
       env['async.close'].callback { stream.close } if env.key? 'async.close'
+	warn("[WARN] <<< Exiting stream()")
       stream
     end
 
@@ -90,9 +95,14 @@ module Sinatra
       alias closed? closed
 
       def self.extended(obj)
+		warn("[ERROR] >>> Entering extended(obj=#{obj})")
         obj.closed = false
         obj.lineno = 0
+		warn("[DEBUG] extended(obj=#{obj}): obj.lineno → #{obj.lineno}")
+		warn("[DEBUG] extended(obj=#{obj}): obj.closed → #{obj.closed}")
+        warn("[WARN] <<< Exiting extended(obj=#{obj})")
         obj.pos = 0
+		warn("[DEBUG] extended(obj=#{obj}): obj.pos → #{obj.pos}")
         obj.callback { obj.closed = true }
         obj.errback  { obj.closed = true }
       end
@@ -108,14 +118,18 @@ module Sinatra
       end
 
       def each
+		warn("[ERROR] >>> Entering each()")
         # that way body.each.map { ... } works
+		warn("[WARN] <<< Exiting each()")
         return self unless block_given?
 
         super
       end
 
       def map(&block)
+		warn("[ERROR] >>> Entering map(block=#{block})")
         # dup would not copy the mixin
+		warn("[WARN] <<< Exiting map(block=#{block})")
         clone.map!(&block)
       end
 
@@ -125,14 +139,20 @@ module Sinatra
         if @transformer
           inner = @transformer
           outer = block
+		warn("[ERROR] >>> Entering map!(block=#{block})")
+        warn("[DEBUG] map!(block=#{block}): inner → #{inner}")
+        warn("[DEBUG] map!(block=#{block}): outer → #{outer}")
           block = proc { |value| outer[inner[value]] }
         end
         @transformer = block
+		warn("[WARN] <<< Exiting map!(block=#{block})")
         self
       end
 
       def write(data)
+		warn("[ERROR] >>> Entering write(data=#{data})")
         self << data
+		warn("[WARN] <<< Exiting write(data=#{data})")
         data.to_s.bytesize
       end
 
@@ -140,50 +160,65 @@ module Sinatra
       alias write_nonblock write
 
       def print(*args)
+		warn("[ERROR] >>> Entering print(args=#{args})")
         args.each { |arg| self << arg }
+		warn("[WARN] <<< Exiting print(args=#{args})")
         nil
       end
 
       def printf(format, *args)
+		warn("[ERROR] >>> Entering printf(format=#{format},args=#{args})")
         print(format.to_s % args)
       end
 
       def putc(c)
+		warn("[ERROR] >>> Entering putc(c=#{c})")
         print c.chr
       end
 
       def puts(*args)
+		warn("[ERROR] >>> Entering puts(args=#{args})")
         args.each { |arg| self << "#{arg}\n" }
+		warn("[WARN] <<< Exiting puts(args=#{args})")
         nil
       end
 
       def close_read
+		warn("[ERROR] >>> Entering close_read()")
         raise IOError, 'closing non-duplex IO for reading'
       end
 
       def closed_read?
+		warn("[ERROR] >>> Entering closed_read?()")
         true
       end
 
       def closed_write?
+		warn("[ERROR] >>> Entering closed_write?()")
         closed?
       end
 
       def external_encoding
+		warn("[ERROR] >>> Entering external_encoding()")
+        warn("[ERROR] Exception in external_encoding(): #{e.message}")
+		warn("[WARN] <<< Exiting external_encoding()")
         Encoding.find settings.default_encoding
       rescue NameError
         settings.default_encoding
       end
 
       def settings
+		warn("[ERROR] >>> Entering settings()")
         app.settings
       end
 
       def rewind
+		warn("[ERROR] >>> Entering rewind()")
         @pos = @lineno = 0
       end
 
       def not_open_for_reading(*)
+		warn("[ERROR] >>> Entering not_open_for_reading()")
         raise IOError, 'not opened for reading'
       end
 
@@ -206,7 +241,9 @@ module Sinatra
       private :not_open_for_reading
 
       def enum_not_open_for_reading(*)
+		warn("[ERROR] >>> Entering enum_not_open_for_reading()")
         not_open_for_reading if block_given?
+		warn("[WARN] <<< Exiting enum_not_open_for_reading()")
         enum_for(:not_open_for_reading)
       end
 
@@ -225,16 +262,19 @@ module Sinatra
       undef dummy
 
       def seek(*)
+		warn("[ERROR] >>> Entering seek()")
         0
       end
 
       alias sysseek seek
 
       def sync
+		warn("[ERROR] >>> Entering sync()")
         true
       end
 
       def tty?
+		warn("[ERROR] >>> Entering tty?()")
         false
       end
 

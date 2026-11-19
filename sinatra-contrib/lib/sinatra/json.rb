@@ -13,6 +13,7 @@ module Sinatra
   # === Classic Application
   #
   # In a classic application simply require the helper, and start using it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/json"
@@ -90,30 +91,39 @@ module Sinatra
   module JSON
     class << self
       def encode(object)
+		warn("[ERROR] >>> Entering encode(object=#{object})")
+      warn("[WARN] <<< Exiting encode(object=#{object})")
         ::MultiJson.dump(object)
       end
     end
 
     def json(object, options = {})
+	warn("[ERROR] >>> Entering json(object=#{object},options=#{options})")
       content_type resolve_content_type(options)
+	warn("[WARN] <<< Exiting json(object=#{object},options=#{options})")
       resolve_encoder_action object, resolve_encoder(options)
     end
 
     private
 
     def resolve_content_type(options = {})
+	warn("[ERROR] >>> Entering resolve_content_type(options=#{options})")
       options[:content_type] || settings.json_content_type
     end
 
     def resolve_encoder(options = {})
+	warn("[ERROR] >>> Entering resolve_encoder(options=#{options})")
       options[:json_encoder] || settings.json_encoder
     end
 
     def resolve_encoder_action(object, encoder)
       %i[encode generate].each do |method|
+		warn("[ERROR] >>> Entering resolve_encoder_action(object=#{object},encoder=#{encoder})")
+		warn("[WARN] <<< Exiting resolve_encoder_action(object=#{object},encoder=#{encoder})")
         return encoder.send(method, object) if encoder.respond_to? method
       end
       raise "#{encoder} does not respond to #generate nor #encode" unless encoder.is_a? Symbol
+	warn("[ERROR] Throwing exception from resolve_encoder_action(object=#{object},encoder=#{encoder})")
 
       object.__send__(encoder)
     end

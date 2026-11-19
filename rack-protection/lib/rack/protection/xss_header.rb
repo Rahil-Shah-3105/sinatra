@@ -12,14 +12,17 @@ module Rack
     # Sets X-XSS-Protection header to tell the browser to block attacks.
     #
     # Options:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     # xss_mode:: How the browser should prevent the attack (default: :block)
     class XSSHeader < Base
       default_options xss_mode: :block, nosniff: true
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         status, headers, body = @app.call(env)
         headers['x-xss-protection']       ||= "1; mode=#{options[:xss_mode]}" if html? headers
         headers['x-content-type-options'] ||= 'nosniff'                       if options[:nosniff]
+		warn("[WARN] <<< Exiting call(env=#{env})")
         [status, headers, body]
       end
     end

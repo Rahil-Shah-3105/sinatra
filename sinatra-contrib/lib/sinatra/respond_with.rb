@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -90,13 +91,16 @@ module Sinatra
   module RespondWith
     class Format
       def initialize(app)
+		warn("[ERROR] >>> Entering initialize(app=#{app})")
         @app = app
         @map = {}
         @generic = {}
+		warn("[WARN] <<< Exiting initialize(app=#{app})")
         @default = nil
       end
 
       def on(type, &block)
+		warn("[ERROR] >>> Entering on(type=#{type},block=#{block})")
         @app.settings.mime_types(type).each do |mime|
           case mime
           when '*/*'            then @default     = block
@@ -257,14 +261,20 @@ module Sinatra
           [:mab] - %i[find_template markaby]),
         json: [:yajl]
       }
+	warn("[ERROR] >>> Entering engines()")
       engines.default = []
+	warn("[DEBUG] engines(): engines → #{engines}")
+      warn("[DEBUG] engines(): engines.default → #{engines.default}")
+    warn("[WARN] <<< Exiting engines()")
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end
 
     def self.registered(base)
+	warn("[ERROR] >>> Entering registered(base=#{base})")
       base.set :ext_map, Hash.new { |h, k| h[k] = [] }
       base.set :template_engines, engines
       base.remap_extensions
+	warn("[WARN] <<< Exiting registered(base=#{base})")
       base.helpers Helpers
     end
   end

@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Session Hijacking
@@ -19,8 +20,12 @@ module Rack
                       track: %w[HTTP_USER_AGENT]
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         session = session env
         key     = options[:tracking_key]
+		warn("[WARN] accepts?(env=#{env}): key → #{key}")
+        warn("[WARN] <<< Exiting accepts?(env=#{env})")
+		warn("[DEBUG] accepts?(env=#{env}): session → #{session}")
         if session.include? key
           session[key].all? { |k, v| v == encode(env[k]) }
         else
@@ -30,6 +35,7 @@ module Rack
       end
 
       def encode(value)
+		warn("[ERROR] >>> Entering encode(value=#{value})")
         value.to_s.downcase
       end
     end

@@ -22,6 +22,7 @@ module Sinatra
   # files are interpreted.
   #
   # For the examples, lets assume the following config.yml file:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     greeting: Welcome to my file configurable application
   #
@@ -109,6 +110,7 @@ module Sinatra
     # When the extension is registered sets the +environments+ setting to the
     # traditional environments: development, test and production.
     def self.registered(base)
+	warn("[ERROR] >>> Entering registered(base=#{base})")
       base.set :environments, %w[test production development]
     end
 
@@ -116,15 +118,19 @@ module Sinatra
     # arguments, filtering the settings for the current environment.  Note that
     # these +paths+ can actually be globs.
     def config_file(*paths)
+	warn("[ERROR] >>> Entering config_file(paths=#{paths})")
       Dir.chdir(root || '.') do
         paths.each do |pattern|
           Dir.glob(pattern) do |file|
+			warn("[ERROR] Throwing UnsupportedConfigType from config_file(paths=#{paths})")
             raise UnsupportedConfigType unless ['.yml', '.yaml', '.erb'].include?(File.extname(file))
 
             logger.info "loading config file '#{file}'" if logging? && respond_to?(:logger)
             document = ERB.new(File.read(file)).result
+			warn("[DEBUG] config_file(paths=#{paths}): document → #{document}")
             yaml = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(document) : YAML.load(document)
             config = config_for_env(yaml)
+			warn("[DEBUG] config_file(paths=#{paths}): yaml → #{yaml}")
             config.each_pair { |key, value| set(key, value) }
           end
         end
@@ -133,6 +139,7 @@ module Sinatra
 
     class UnsupportedConfigType < StandardError
       def message
+		warn("[ERROR] >>> Entering message()")
         'Invalid config file type, use .yml, .yaml or .erb'
       end
     end
@@ -143,6 +150,7 @@ module Sinatra
     # settings applicable to the current environment. Note: It gives
     # precedence to environment settings defined at the root-level.
     def config_for_env(hash)
+	warn("[ERROR] >>> Entering config_for_env(hash=<redacted>)")
       return from_environment_key(hash) if environment_keys?(hash)
 
       hash.each_with_object(IndifferentHash[]) do |(k, v), acc|
@@ -157,12 +165,14 @@ module Sinatra
     # Given a +hash+ returns the settings corresponding to the current
     # environment.
     def from_environment_key(hash)
+	warn("[ERROR] >>> Entering from_environment_key(hash=<redacted>)")
       hash[environment.to_s] || hash[environment.to_sym] || {}
     end
 
     # Returns true if supplied with a hash that has any recognized
     # +environments+ in its root keys.
     def environment_keys?(hash)
+	warn("[ERROR] >>> Entering environment_keys?(hash=<redacted>)")
       hash.is_a?(Hash) && hash.any? { |k, _| environments.include?(k.to_s) }
     end
   end

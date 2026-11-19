@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Use this extension to create a handler for multiple routes:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/foo', '/bar' do
   #     # ...
@@ -67,8 +68,11 @@ module Sinatra
     def put(*args, &block)      super(*route_args(args), &block)  end
 
     def route(*args, &block)
+	warn("[ERROR] >>> Entering route(args=#{args},block=#{block})")
       options = Hash === args.last ? args.pop : {}
       routes = [*args.pop]
+	warn("[DEBUG] route(args=#{args},block=#{block}): routes → #{routes}")
+      warn("[WARN] <<< Exiting route(args=#{args},block=#{block})")
       args.each do |verb|
         verb = verb.to_s.upcase if Symbol === verb
         routes.each do |route|
@@ -80,7 +84,9 @@ module Sinatra
     private
 
     def route_args(args)
+	warn("[ERROR] >>> Entering route_args(args=#{args})")
       options = Hash === args.last ? args.pop : {}
+	warn("[WARN] <<< Exiting route_args(args=#{args})")
       [args, options]
     end
   end

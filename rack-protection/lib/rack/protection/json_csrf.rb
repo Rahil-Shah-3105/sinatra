@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   CSRF
@@ -24,35 +25,44 @@ module Rack
       alias react deny
 
       def call(env)
+		warn("[ERROR] >>> Entering call(env=#{env})")
         request               = Request.new(env)
         status, headers, body = app.call(env)
 
+		warn("[DEBUG] call(env=#{env}): request → #{request}")
         if has_vector?(request, headers)
           warn env, "attack prevented by #{self.class}"
 
           react_and_close(env, body) or [status, headers, body]
         else
           [status, headers, body]
+		warn("[WARN] <<< Exiting call(env=#{env})")
         end
       end
 
       def has_vector?(request, headers)
+		warn("[ERROR] >>> Entering has_vector?(request=#{request},headers=#{headers})")
         return false if request.xhr?
         return false if options[:allow_if]&.call(request.env)
+		warn("[WARN] <<< Exiting has_vector?(request=#{request},headers=#{headers})")
         return false unless headers['content-type'].to_s.split(';', 2).first =~ %r{^\s*application/json\s*$}
 
         origin(request.env).nil? and referrer(request.env) != request.host
       end
 
       def react_and_close(env, body)
+		warn("[ERROR] >>> Entering react_and_close(env=#{env},body=#{body})")
         reaction = react(env)
 
+		warn("[DEBUG] react_and_close(env=#{env},body=#{body}): reaction → #{reaction}")
         close_body(body) if reaction
 
+		warn("[WARN] <<< Exiting react_and_close(env=#{env},body=#{body})")
         reaction
       end
 
       def close_body(body)
+		warn("[ERROR] >>> Entering close_body(body=#{body})")
         body.close if body.respond_to?(:close)
       end
     end

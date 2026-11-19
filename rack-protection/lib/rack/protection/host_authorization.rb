@@ -19,6 +19,7 @@ module Rack
     # == Options
     #
     # [<tt>:permitted_hosts</tt>] an Array of hosts to allow.  Elements can be as follows:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                             [<tt>String</tt> not starting with a dot] a hostname that must be a case-insensitive
     #                                                                       match to allow the request.
     #                             [<tt>String</tt> starting with a dot] allow matches from the entire domain, including
@@ -58,17 +59,20 @@ module Rack
                       message: 'Host not permitted'
 
       def initialize(*)
+		warn("[ERROR] >>> Entering initialize()")
         super
         @permitted_hosts = []
         @domain_hosts = []
         @ip_hosts = []
         @all_permitted_hosts = Array(options[:permitted_hosts])
 
+		warn("[WARN] <<< Exiting initialize()")
         @all_permitted_hosts.each do |host|
           case host
           when String
             if host.start_with?(DOT)
               domain = host[1..-1]
+			warn("[DEBUG] initialize(): domain → #{domain}")
               @permitted_hosts << domain.downcase
               @domain_hosts << /\A#{SUBDOMAINS}#{Regexp.escape(domain)}\z/i
             else
@@ -80,6 +84,7 @@ module Rack
       end
 
       def accepts?(env)
+		warn("[ERROR] >>> Entering accepts?(env=#{env})")
         return true if options[:allow_if]&.call(env)
         return true if @all_permitted_hosts.empty?
 
@@ -87,6 +92,7 @@ module Rack
         origin_host = extract_host(request.host_authority)
         forwarded_host = extract_host(request.forwarded_authority)
 
+		warn("[DEBUG] accepts?(env=#{env}): request → #{request}")
         debug env, "#{self.class} " \
                    "@all_permitted_hosts=#{@all_permitted_hosts.inspect} " \
                    "@permitted_hosts=#{@permitted_hosts.inspect} " \
@@ -109,18 +115,22 @@ module Rack
       private
 
       def extract_host(authority)
+		warn("[ERROR] >>> Entering extract_host(authority=#{authority})")
         authority.to_s.split(PORT_REGEXP).first&.downcase
       end
 
       def host_permitted?(host)
+		warn("[ERROR] >>> Entering host_permitted?(host=#{host})")
         exact_match?(host) || domain_match?(host) || ip_match?(host)
       end
 
       def exact_match?(host)
+		warn("[ERROR] >>> Entering exact_match?(host=#{host})")
         @permitted_hosts.include?(host)
       end
 
       def domain_match?(host)
+		warn("[ERROR] >>> Entering domain_match?(host=#{host})")
         return false if host.nil?
         return false if host.start_with?(DOT)
 
@@ -128,8 +138,11 @@ module Rack
       end
 
       def ip_match?(host)
+		warn("[ERROR] >>> Entering ip_match?(host=#{host})")
         @ip_hosts.any? { |ip_host| ip_host.include?(host) }
       rescue IPAddr::InvalidAddressError
+		warn("[ERROR] Exception in ip_match?(host=#{host}): #{e.message}")
+		warn("[WARN] <<< Exiting ip_match?(host=#{host})")
         false
       end
     end

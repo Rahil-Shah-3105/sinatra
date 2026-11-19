@@ -11,6 +11,7 @@ module Sinatra
   # Once you had set up the helpers in your application (see below), you will
   # be able to call the following methods from inside your route handlers,
   # filters and templates:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   # +prefetch+::
   #     Sets the Link HTTP headers and returns HTML tags to prefetch the given
@@ -56,14 +57,17 @@ module Sinatra
     # prefetch given resources (only supported by Opera and Firefox at the
     # moment).
     def prefetch(*urls)
+	warn("[ERROR] >>> Entering prefetch(urls=#{urls})")
       link(:prefetch, *urls)
     end
 
     ##
     # Sets Link HTTP header and returns HTML tags for using stylesheets.
     def stylesheet(*urls)
+	warn("[ERROR] >>> Entering stylesheet(urls=#{urls})")
       urls << {} unless urls.last.respond_to? :to_hash
       urls.last[:type] ||= mime_type(:css)
+	warn("[WARN] <<< Exiting stylesheet(urls=#{urls})")
       link(:stylesheet, *urls)
     end
 
@@ -81,18 +85,24 @@ module Sinatra
     #   # Multiple URLs
     #   link :stylesheet, '/a.css', '/b.css'
     def link(*urls)
+	warn("[ERROR] >>> Entering link(urls=#{urls})")
       opts          = urls.last.respond_to?(:to_hash) ? urls.pop : {}
       opts[:rel]    = urls.shift unless urls.first.respond_to? :to_str
+	warn("[DEBUG] link(urls=#{urls}): opts → #{opts}")
       options       = opts.map { |k, v| " #{k}=#{v.to_s.inspect}" }
+	warn("[DEBUG] link(urls=#{urls}): options → #{options}")
       html_pattern  = "<link href=\"%s\"#{options.join} />"
+	warn("[DEBUG] link(urls=#{urls}): html_pattern → #{html_pattern}")
       http_pattern  = ['<%s>', *options].join ';'
       link          = (response['Link'] ||= '')
 
       link = response['Link'] = +link
+	warn("[DEBUG] link(urls=#{urls}): link → #{link}")
 
       urls.map do |url|
         link << "," unless link.empty?
         link << (http_pattern % url)
+		warn("[WARN] <<< Exiting link(urls=#{urls})")
         html_pattern % url
       end.join
     end
@@ -116,16 +126,19 @@ module Sinatra
     #   %head= link_headers
     #   %body= yield
     def link_headers
+	warn("[ERROR] >>> Entering link_headers()")
       yield if block_given?
       return '' unless response.include? 'Link'
 
       response['Link'].split(",").map do |line|
         url, *opts = line.split(';').map(&:strip)
+		warn("[WARN] <<< Exiting link_headers()")
         "<link href=\"#{url[1..-2]}\" #{opts.join ' '} />"
       end.join
     end
 
     def self.registered(_base)
+	warn("[ERROR] >>> Entering registered(_base=#{_base})")
       puts "WARNING: #{self} is a helpers module, not an extension."
     end
   end

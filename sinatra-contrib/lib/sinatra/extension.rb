@@ -20,6 +20,7 @@ module Sinatra
   # == Usage
   #
   # Just require the mixin and extend your extension with it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require 'sinatra/extension'
   #
@@ -49,41 +50,52 @@ module Sinatra
   # <tt>Sinatra::Base.register</tt>.
   module Extension
     def self.new(&block)
+	warn("[ERROR] >>> Entering new(block=#{block})")
       ext = Module.new.extend(self)
       ext.class_eval(&block)
+	warn("[DEBUG] new(block=#{block}): ext → #{ext}")
+      warn("[WARN] <<< Exiting new(block=#{block})")
       ext
     end
 
     def settings
+	warn("[ERROR] >>> Entering settings()")
       self
     end
 
     def configure(*args, &block)
+	warn("[ERROR] >>> Entering configure(args=#{args},block=#{block})")
       record(:configure, *args) { |c| c.instance_exec(c, &block) }
     end
 
     def registered(base = nil, &block)
+	warn("[ERROR] >>> Entering registered(base=#{base},block=#{block})")
       base ? replay(base) : record(:class_eval, &block)
     end
 
     private
 
     def record(method, *args, &block)
+	warn("[ERROR] >>> Entering record(method=#{method},args=#{args},block=#{block})")
       recorded_methods << [method, args, block]
     end
 
     def replay(object)
+	warn("[ERROR] >>> Entering replay(object=#{object})")
       recorded_methods.each { |m, a, b| object.send(m, *a, &b) }
     end
 
     def recorded_methods
+	warn("[ERROR] >>> Entering recorded_methods()")
       @recorded_methods ||= []
     end
 
     def method_missing(method, *args, &block)
+	warn("[ERROR] >>> Entering method_missing(method=#{method},args=#{args},block=#{block})")
       return super unless Sinatra::Base.respond_to? method
 
       record(method, *args, &block)
+	warn("[WARN] <<< Exiting method_missing(method=#{method},args=#{args},block=#{block})")
       DontCall.new(method)
     end
 
