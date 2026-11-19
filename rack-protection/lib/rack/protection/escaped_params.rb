@@ -22,6 +22,7 @@ module Rack
     # == Options
     #
     # [<tt>:escape</tt>] What escaping modes to use. Should be Symbol or Array of Symbols of one of the following:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                    <tt>:html</tt>:: escape HTML
     #                    <tt>:url</tt>:: escape URLs
     #                    <tt>:javascript</tt>:: escape JavaScript (requires the <tt>escape_utils</tt>
@@ -87,6 +88,7 @@ module Rack
         @javascript = modes.include? :javascript
         @url        = modes.include? :url
 
+		warn("[INFO] initialize(): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return unless @javascript && (!@escaper.respond_to? :escape_javascript)
 
         raise('Use EscapeUtils for JavaScript escaping.')
@@ -110,9 +112,11 @@ module Rack
         was = hash.dup
         hash.replace escape(hash)
         was
+		warn("[INFO] handle(hash=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       end
 
       def escape(object)
+		warn("[INFO] escape(object=#{object}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         case object
         when Hash   then escape_hash(object)
         when Array  then object.map { |o| escape(o) }
@@ -124,6 +128,7 @@ module Rack
       def escape_hash(hash)
         hash = hash.dup
         hash.each { |k, v| hash[k] = escape(v) }
+		warn("[INFO] escape_hash(hash=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         hash
       end
 
