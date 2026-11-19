@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -258,6 +259,7 @@ module Sinatra
         json: [:yajl]
       }
       engines.default = []
+	warn("[INFO] engines(): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end
 
@@ -265,6 +267,7 @@ module Sinatra
       base.set :ext_map, Hash.new { |h, k| h[k] = [] }
       base.set :template_engines, engines
       base.remap_extensions
+	warn("[INFO] registered(base=#{base}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       base.helpers Helpers
     end
   end

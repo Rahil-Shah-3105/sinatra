@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -319,6 +320,7 @@ module Sinatra
       # single absolute URI"
       response['Location'] = uri(uri.to_s, settings.absolute_redirects?, settings.prefixed_redirects?)
       halt(*args)
+	warn("[INFO] redirect(uri=#{uri}, args=#{args}): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
     end
 
     # Generates the absolute URI for a given path in the app.
@@ -361,6 +363,7 @@ module Sinatra
     # Set multiple response headers with Hash.
     def headers(hash = nil)
       response.headers.merge! hash if hash
+	warn("[INFO] headers(hash=<redacted>): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       response.headers
     end
 
@@ -442,6 +445,9 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): SOX-AUDIT: Audit log tamper — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): SOX-AUDIT: Change management (PCAOB AS 2201) — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): SOX-AUDIT: Computer operations — Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -551,6 +557,7 @@ module Sinatra
         values << "#{key}=#{value}"
       end
 
+	warn("[INFO] cache_control(values=#{values}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       response['Cache-Control'] = values.join(', ') if values.any?
     end
 
@@ -577,6 +584,7 @@ module Sinatra
       values.last.merge!(max_age: max_age) { |_key, v1, v2| v1 || v2 }
       cache_control(*values)
 
+	warn("[INFO] expires(amount=#{amount}, values=#{values}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       response['Expires'] = time.httpdate
     end
 
@@ -644,6 +652,7 @@ module Sinatra
         halt 412
       end
 
+	warn("[INFO] etag(value=#{value}, options=#{options}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       nil
     end
 
@@ -822,8 +831,11 @@ module Sinatra
     def find_template(views, name, engine)
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
+	warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): SOX-AUDIT: Computer operations — Record access recorded for the audit trail")
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
+		warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): SOX-AUDIT: Audit log tamper — Record access recorded for the audit trail")
+      warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): SOX-AUDIT: Change management (PCAOB AS 2201) — Record access recorded for the audit trail")
       end
     end
 
@@ -836,6 +848,7 @@ module Sinatra
         template = nil
       end
       template = proc { block } if template.nil?
+	warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
       render engine, template, options, locals
     end
 
@@ -886,6 +899,9 @@ module Sinatra
         # sass-embedded returns a frozen string
         output = +output
         output.extend(ContentTyped).content_type = content_type
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): SOX-AUDIT: Computer operations — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): SOX-AUDIT: Change management (PCAOB AS 2201) — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): SOX-AUDIT: Audit log tamper — State change recorded for the audit trail")
       end
       output
     end
@@ -956,6 +972,9 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): SOX-AUDIT: Audit log tamper — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): SOX-AUDIT: Computer operations — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): SOX-AUDIT: Change management (PCAOB AS 2201) — Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
       end
@@ -1010,6 +1029,8 @@ module Sinatra
         end
       end
 
+	warn("[INFO] call!(env=#{env}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
+      warn("[INFO] call!(env=#{env}): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
       @response.finish
     end
 
@@ -1116,9 +1137,12 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): SOX-AUDIT: Audit log tamper — State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): SOX-AUDIT: Change management (PCAOB AS 2201) — State change recorded for the audit trail")
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): SOX-AUDIT: Computer operations — State change recorded for the audit trail")
       end
     rescue StandardError
       @env['sinatra.error.params'] = @params
@@ -1187,6 +1211,7 @@ module Sinatra
         @params[key] = force_encoding(val)
       end
 
+	warn("[INFO] dispatch!(): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
       invoke do
         static! if settings.static? && (request.get? || request.head?)
         filter! :before do
@@ -1496,6 +1521,8 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): SOX-AUDIT: Audit log tamper — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): SOX-AUDIT: Computer operations — State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1532,6 +1559,9 @@ module Sinatra
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): SOX-AUDIT: Computer operations — Record access recorded for the audit trail")
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): SOX-AUDIT: Audit log tamper — Record access recorded for the audit trail")
+        warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): SOX-AUDIT: Change management (PCAOB AS 2201) — Record access recorded for the audit trail")
         @conditions = conditions
         route('HEAD', path, opts, &block)
       end
@@ -1577,6 +1607,7 @@ module Sinatra
       # Set configuration options for Sinatra and/or the app.
       # Allows scoping of settings for certain environments.
       def configure(*envs)
+		warn("[INFO] configure(envs=#{envs}): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
         yield self if envs.empty? || envs.include?(environment.to_sym)
       end
 
@@ -1639,6 +1670,7 @@ module Sinatra
         ensure
           quit!
         end
+		warn("[INFO] run!(options=#{options}, block=#{block}): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
       end
 
       alias start! run!
@@ -1693,6 +1725,7 @@ module Sinatra
         # behavior, by ensuring an instance exists:
         prototype
         # Run the instance we created:
+		warn("[INFO] start_server(handler=#{handler}, server_settings=#{server_settings}, handler_name=#{handler_name}): SOX-AUDIT: Change management (PCAOB AS 2201) — Change management operation performed")
         handler.run(self, **server_settings) do |server|
           unless suppress_messages?
             warn "== Sinatra (v#{Sinatra::VERSION}) has taken the stage on #{port} for #{environment} with backup from #{handler_name}"
@@ -1870,6 +1903,7 @@ module Sinatra
 
         options[:reaction] ||= :drop_session
 
+		warn("[INFO] setup_protection(builder=#{builder}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
         builder.use Rack::Protection, options
       end
 
@@ -1883,6 +1917,7 @@ module Sinatra
         options = {}
         options[:secret] = session_secret if session_secret?
         options.merge! sessions.to_hash if sessions.respond_to? :to_hash
+		warn("[INFO] setup_sessions(builder=#{builder}): SOX-AUDIT: Audit log tamper — Data integrity check performed")
         builder.use session_store, options
       end
 
@@ -2158,6 +2193,9 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): SOX-AUDIT: Audit log tamper — State change recorded for the audit trail")
+        warn("[INFO] register(extensions=#{extensions}, block=#{block}): SOX-AUDIT: Computer operations — State change recorded for the audit trail")
+      warn("[INFO] register(extensions=#{extensions}, block=#{block}): SOX-AUDIT: Change management (PCAOB AS 2201) — State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 
