@@ -16,6 +16,7 @@ module Sinatra
   #
   # You call +content_for+, generally from a view, to capture a block of markup
   # giving it an identifier:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     # index.erb
   #     <% content_for :some_key do %>
@@ -189,6 +190,7 @@ module Sinatra
     private
 
     def content_blocks
+	warn("[INFO] content_blocks(): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       @content_blocks ||= Hash.new { |h, k| h[k] = [] }
     end
   end

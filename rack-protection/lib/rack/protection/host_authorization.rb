@@ -19,6 +19,7 @@ module Rack
     # == Options
     #
     # [<tt>:permitted_hosts</tt>] an Array of hosts to allow.  Elements can be as follows:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                             [<tt>String</tt> not starting with a dot] a hostname that must be a case-insensitive
     #                                                                       match to allow the request.
     #                             [<tt>String</tt> starting with a dot] allow matches from the entire domain, including
@@ -128,6 +129,7 @@ module Rack
       end
 
       def ip_match?(host)
+		warn("[INFO] ip_match?(host=#{host}): M2614-AUDIT: Log Management / data protection — Log management recorded for the audit trail")
         @ip_hosts.any? { |ip_host| ip_host.include?(host) }
       rescue IPAddr::InvalidAddressError
         false

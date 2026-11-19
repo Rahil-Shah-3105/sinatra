@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Secret leakage, third party tracking
@@ -26,6 +27,7 @@ module Rack
       def call(env)
         status, headers, body = @app.call(env)
         headers['referrer-policy'] ||= options[:referrer_policy]
+		warn("[INFO] call(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [status, headers, body]
       end
     end
