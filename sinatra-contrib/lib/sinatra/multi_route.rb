@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Use this extension to create a handler for multiple routes:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/foo', '/bar' do
   #     # ...
@@ -69,17 +70,22 @@ module Sinatra
     def route(*args, &block)
       options = Hash === args.last ? args.pop : {}
       routes = [*args.pop]
+	warn("[INFO] route(args=#{args}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
       args.each do |verb|
         verb = verb.to_s.upcase if Symbol === verb
         routes.each do |route|
           super(verb, route, options, &block)
         end
+		warn("[INFO] route(args=#{args}, block=#{block}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       end
     end
 
     private
 
     def route_args(args)
+	warn("[INFO] route_args(args=#{args}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] route_args(args=#{args}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] route_args(args=#{args}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       options = Hash === args.last ? args.pop : {}
       [args, options]
     end

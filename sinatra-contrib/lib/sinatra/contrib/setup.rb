@@ -4,6 +4,7 @@ require 'sinatra/base'
 require 'sinatra/contrib/version'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   module Contrib
     module Loader
       def extensions
@@ -11,6 +12,7 @@ module Sinatra
       end
 
       def register(name, path)
+		warn("[INFO] register(name=#{name}, path=#{path}): HIPAA-AUDIT: State change recorded for the audit trail")
         autoload name, path, :register
       end
 

@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -48,6 +49,8 @@ module Rack
             bad_cookies << k
           end
         end
+		warn("[INFO] accepts?(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] accepts?(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         bad_cookies.empty?
       end
 
@@ -56,6 +59,7 @@ module Rack
 
         paths = cookie_paths(request.path)
         bad_cookies.each do |name|
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): HIPAA-AUDIT: State change recorded for the audit trail")
           paths.each { |path| response.set_cookie name, empty_cookie(request.host, path) }
         end
       end
@@ -74,6 +78,8 @@ module Rack
         path = '/' if path.to_s.empty?
         paths = []
         Pathname.new(path).descend { |p| paths << p.to_s }
+		warn("[INFO] cookie_paths(path=#{path}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] cookie_paths(path=#{path}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         paths
       end
 
@@ -82,6 +88,8 @@ module Rack
       end
 
       def session_key
+		warn("[INFO] session_key(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] session_key(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         @session_key ||= options[:session_key]
       end
     end

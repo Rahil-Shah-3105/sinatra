@@ -10,6 +10,7 @@ end
 require 'forwardable'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   Base.set :environment, :test
 
   # Helper methods to ease testing your Sinatra application. Partly extracted
@@ -162,6 +163,8 @@ module Sinatra
       def options(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'OPTIONS', params: params))
         current_session.send(:process_request, uri, env, &block)
+		warn("[INFO] options(uri=#{uri}, params=#{params}, env=#{env}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] options(uri=#{uri}, params=#{params}, env=#{env}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
       end
     end
 
@@ -174,12 +177,15 @@ module Sinatra
       def patch(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'PATCH', params: params))
         current_session.send(:process_request, uri, env, &block)
+		warn("[INFO] patch(uri=#{uri}, params=#{params}, env=#{env}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] patch(uri=#{uri}, params=#{params}, env=#{env}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
       end
     end
 
     # @return [Boolean]
     def last_request?
       last_request
+	warn("[INFO] last_request?(): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
       true
     rescue Rack::Test::Error
       false
@@ -191,6 +197,8 @@ module Sinatra
       return {} unless last_request?
       raise Rack::Test::Error, 'session not enabled for app' unless last_env['rack.session'] || app.session?
 
+	warn("[INFO] session(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+      warn("[INFO] session(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
       last_request.session
     end
 

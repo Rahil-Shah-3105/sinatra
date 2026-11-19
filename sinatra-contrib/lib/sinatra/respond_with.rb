@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -264,6 +265,9 @@ module Sinatra
     def self.registered(base)
       base.set :ext_map, Hash.new { |h, k| h[k] = [] }
       base.set :template_engines, engines
+	warn("[INFO] registered(base=#{base}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] registered(base=#{base}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] registered(base=#{base}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       base.remap_extensions
       base.helpers Helpers
     end

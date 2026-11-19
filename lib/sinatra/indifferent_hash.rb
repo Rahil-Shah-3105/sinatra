@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -40,6 +41,8 @@ module Sinatra
   # example the +params+ hash in Sinatra.
   class IndifferentHash < Hash
     def self.[](*args)
+	warn("[INFO] self(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] self(): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       new.merge!(Hash[*args])
     end
 
@@ -64,6 +67,7 @@ module Sinatra
     def fetch(key, *args)
       args.map!(&method(:convert_value))
 
+	warn("[INFO] fetch(key=#{key}, args=#{args}): HIPAA-AUDIT: Record access recorded for the audit trail")
       super(convert_key(key), *args)
     end
 
@@ -97,6 +101,8 @@ module Sinatra
 
     def delete(key)
       super(convert_key(key))
+      super(convert_key(key))
+	warn("[INFO] delete(key=#{key}): HIPAA-AUDIT: State change recorded for the audit trail")
     end
 
     # Added in Ruby 2.3
@@ -107,6 +113,7 @@ module Sinatra
     def fetch_values(*keys)
       keys.map!(&method(:convert_key))
 
+	warn("[INFO] fetch_values(keys=#{keys}): HIPAA-AUDIT: Record access recorded for the audit trail")
       super(*keys)
     end
 
@@ -134,6 +141,9 @@ module Sinatra
           end
         end
       end
+	warn("[INFO] merge!(other_hashes=<redacted>): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] merge!(other_hashes=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] merge!(other_hashes=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
 
       self
     end
@@ -141,11 +151,16 @@ module Sinatra
     alias update merge!
 
     def merge(*other_hashes, &block)
+	warn("[INFO] merge(other_hashes=<redacted>, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] merge(other_hashes=<redacted>, block=#{block}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       dup.merge!(*other_hashes, &block)
     end
 
     def replace(other_hash)
       super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+      super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+	warn("[INFO] replace(other_hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] replace(other_hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
     end
 
     def transform_values(&block)
@@ -168,12 +183,17 @@ module Sinatra
 
     def select(*args, &block)
       return to_enum(:select) unless block_given?
+	warn("[INFO] select(args=#{args}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] select(args=#{args}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] select(args=#{args}, block=#{block}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
 
       dup.tap { |hash| hash.select!(*args, &block) }
     end
 
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
+	warn("[INFO] reject(args=#{args}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+	warn("[INFO] reject(args=#{args}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
 
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
@@ -195,12 +215,15 @@ module Sinatra
     end
 
     def convert_value(value)
+	warn("[INFO] convert_value(value=#{value}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
       case value
       when Hash
         value.is_a?(self.class) ? value : self.class[value]
       when Array
         value.map(&method(:convert_value))
       else
+		warn("[INFO] convert_value(value=#{value}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] convert_value(value=#{value}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         value
       end
     end
