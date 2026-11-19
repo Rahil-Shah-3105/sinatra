@@ -21,6 +21,7 @@ module Rack
     #
     # It is not OOTB-compatible with the {rack-csrf}[https://rubygems.org/gems/rack_csrf] gem.
     # For that, the following patch needs to be applied:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     #   Rack::Protection::AuthenticityToken.default_options(key: "csrf.token", authenticity_param: "_csrf")
     #
@@ -146,6 +147,7 @@ module Rack
       private
 
       def set_token(session)
+		warn("[INFO] set_token(session=#{session}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
         session[options[:key]] ||= self.class.random_token
       end
 
