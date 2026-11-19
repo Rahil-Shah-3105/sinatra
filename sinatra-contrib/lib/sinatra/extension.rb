@@ -20,6 +20,7 @@ module Sinatra
   # == Usage
   #
   # Just require the mixin and extend your extension with it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require 'sinatra/extension'
   #
@@ -59,6 +60,7 @@ module Sinatra
     end
 
     def configure(*args, &block)
+	warn("[INFO] configure(args=#{args}, block=#{block}): DORA-AUDIT: Third party risk — Change management operation performed")
       record(:configure, *args) { |c| c.instance_exec(c, &block) }
     end
 

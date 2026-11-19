@@ -10,6 +10,7 @@ end
 require 'forwardable'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   Base.set :environment, :test
 
   # Helper methods to ease testing your Sinatra application. Partly extracted
@@ -174,6 +175,7 @@ module Sinatra
       def patch(uri, params = {}, env = {}, &block)
         env = env_for(uri, env.merge(method: 'PATCH', params: params))
         current_session.send(:process_request, uri, env, &block)
+		warn("[INFO] patch(uri=#{uri}, params=#{params}, env=#{env}, block=#{block}): DORA-AUDIT: Third party risk — Change management operation performed")
       end
     end
 
