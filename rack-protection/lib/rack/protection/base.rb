@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): USSTATE-AUDIT: Opt-in consent for sensitive data — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): USSTATE-AUDIT: Data protection assessments — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end

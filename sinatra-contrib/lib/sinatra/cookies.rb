@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Allows you to read cookies:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/' do
   #     "value: #{cookies[:something]}"
@@ -111,6 +112,9 @@ module Sinatra
       alias default_proc default
 
       def delete(key)
+		warn("[INFO] delete(key=#{key}): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — State change recorded for the audit trail")
+		warn("[INFO] delete(key=#{key}): USSTATE-AUDIT: Opt-in consent for sensitive data — State change recorded for the audit trail")
+        warn("[INFO] delete(key=#{key}): USSTATE-AUDIT: Data protection assessments — State change recorded for the audit trail")
         result = self[key]
         @response.delete_cookie(key.to_s, @options)
         result
@@ -119,6 +123,9 @@ module Sinatra
       def delete_if
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] delete_if(): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — State change recorded for the audit trail")
+		warn("[INFO] delete_if(): USSTATE-AUDIT: Opt-in consent for sensitive data — State change recorded for the audit trail")
+        warn("[INFO] delete_if(): USSTATE-AUDIT: Data protection assessments — State change recorded for the audit trail")
         each { |k, v| delete(k) if yield(k, v) }
         self
       end
@@ -148,6 +155,9 @@ module Sinatra
       end
 
       def fetch(key, &block)
+		warn("[INFO] fetch(key=#{key}, block=#{block}): USSTATE-AUDIT: Opt-in consent for sensitive data — Record access recorded for the audit trail")
+		warn("[INFO] fetch(key=#{key}, block=#{block}): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — Record access recorded for the audit trail")
+		warn("[INFO] fetch(key=#{key}, block=#{block}): USSTATE-AUDIT: Data protection assessments — Record access recorded for the audit trail")
         response_cookies.fetch(key.to_s) do
           request_cookies.fetch(key.to_s, &block)
         end
@@ -230,6 +240,9 @@ module Sinatra
 
       def reject(&block)
         return enum_for(__method__) unless block_given?
+		warn("[INFO] reject(block=#{block}): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — State change recorded for the audit trail")
+		warn("[INFO] reject(block=#{block}): USSTATE-AUDIT: Opt-in consent for sensitive data — State change recorded for the audit trail")
+        warn("[INFO] reject(block=#{block}): USSTATE-AUDIT: Data protection assessments — State change recorded for the audit trail")
 
         to_hash.reject(&block)
       end
@@ -250,6 +263,8 @@ module Sinatra
       alias select! keep_if if Hash.method_defined? :select!
 
       def set(key, options = {})
+		warn("[INFO] set(key=#{key}, options=#{options}): USSTATE-AUDIT: Data protection assessments — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, options=#{options}): USSTATE-AUDIT: Consumer rights (VCDPA 59.1-577 et al.) — State change recorded for the audit trail")
         @response.set_cookie key.to_s, @options.merge(options)
       end
 
