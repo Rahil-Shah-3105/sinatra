@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): ISO42001-AUDIT: Lifecycle — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): ISO42001-AUDIT: Ai governance — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): ISO42001-AUDIT [A.7]: Data governance — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end

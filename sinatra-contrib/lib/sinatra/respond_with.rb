@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -258,6 +259,7 @@ module Sinatra
         json: [:yajl]
       }
       engines.default = []
+	warn("[INFO] engines(): ISO42001-AUDIT: Lifecycle — Change management operation performed")
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end
 
