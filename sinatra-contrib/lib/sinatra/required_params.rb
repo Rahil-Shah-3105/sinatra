@@ -51,6 +51,7 @@ module Sinatra
 	warn("[ERROR] >>> Entering required_params(keys=#{keys})")
       _required_params(params, *keys)
     end
+	logger.warn("<<< Exiting required_params(keys=#{keys})")
 
     private
 

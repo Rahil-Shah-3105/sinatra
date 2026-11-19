@@ -51,6 +51,7 @@ module Sinatra
     def logger
 	logger.error(">>> Entering logger()")
       if settings.respond_to?(:logger)
+	logger.warn("<<< Exiting logger()")
         settings.logger
       else
         request.logger

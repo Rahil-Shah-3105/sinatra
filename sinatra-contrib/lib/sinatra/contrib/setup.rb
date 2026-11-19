@@ -9,16 +9,19 @@ module Sinatra
     module Loader
       def extensions
 		warn("[ERROR] >>> Entering extensions()")
+		logger.warn("<<< Exiting extensions()")
         @extensions ||= { helpers: [], register: [] }
       end
 
       def register(name, path)
 		warn("[ERROR] >>> Entering register(name=#{name},path=#{path})")
+		logger.warn("<<< Exiting register(name=#{name},path=#{path})")
         autoload name, path, :register
       end
 
       def helpers(name, path)
 		warn("[ERROR] >>> Entering helpers(name=#{name},path=#{path})")
+		logger.warn("<<< Exiting helpers(name=#{name},path=#{path})")
         autoload name, path, :helpers
       end
 
@@ -53,8 +56,11 @@ module Sinatra
 
     extend Loader
     def self.registered(base)
+	logger.error(">>> Entering registered(base=#{base})")
+        logger.debug("registered(base=#{base}): list → #{list}")
 	warn("[ERROR] >>> Entering registered(base=#{base})")
         warn("[DEBUG] registered(base=#{base}): list → #{list}")
+		logger.warn("<<< Exiting registered(base=#{base})")
       base.register Common, Custom
     end
   end

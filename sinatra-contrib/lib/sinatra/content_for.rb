@@ -150,6 +150,7 @@ module Sinatra
     #     <% end %>
     def content_for?(key)
 	warn("[ERROR] >>> Entering content_for?(key=#{key})")
+	logger.warn("<<< Exiting content_for?(key=#{key})")
       content_blocks[key.to_sym].any?
     end
 
@@ -160,6 +161,7 @@ module Sinatra
 	warn("[ERROR] >>> Entering clear_content_for(key=#{key})")
       content_blocks.delete(key.to_sym) if content_for?(key)
     end
+	logger.warn("<<< Exiting clear_content_for(key=#{key})")
 
     # Render the captured blocks for a given key. For example:
     #
@@ -181,6 +183,7 @@ module Sinatra
     def yield_content(key, *args, &block)
 	warn("[ERROR] >>> Entering yield_content(key=#{key},args=#{args},block=#{block})")
       if block_given? && !content_for?(key)
+	logger.warn("<<< Exiting yield_content(key=#{key},args=#{args},block=#{block})")
         haml? && Tilt[:haml] == Tilt::HamlTemplate && respond_to?(:capture_haml) ? capture_haml(*args, &block) : yield(*args)
       else
         content = content_blocks[key.to_sym].map { |b| capture(*args, &b) }
@@ -197,6 +200,7 @@ module Sinatra
 
     def content_blocks
 	warn("[ERROR] >>> Entering content_blocks()")
+	logger.warn("<<< Exiting content_blocks()")
       @content_blocks ||= Hash.new { |h, k| h[k] = [] }
     end
   end

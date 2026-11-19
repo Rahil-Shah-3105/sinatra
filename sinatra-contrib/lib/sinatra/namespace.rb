@@ -190,6 +190,7 @@ module Sinatra
     def self.new(base, pattern, conditions = {}, &block)
 	warn("[ERROR] >>> Entering new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block})")
       Module.new do
+	logger.warn("<<< Exiting new(base=#{base},pattern=#{pattern},conditions=#{conditions},block=#{block})")
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
         @conditions = nil
@@ -210,6 +211,7 @@ module Sinatra
     module InstanceMethods
       def settings
 		warn("[ERROR] >>> Entering settings()")
+		logger.warn("<<< Exiting settings()")
         @namespace
       end
 
@@ -221,6 +223,7 @@ module Sinatra
 
       def redirect_to(uri, *args)
 		warn("[ERROR] >>> Entering redirect_to(uri=#{uri},args=#{args})")
+		logger.warn("<<< Exiting redirect_to(uri=#{uri},args=#{args})")
         redirect("#{@namespace.pattern}#{uri}", *args)
       end
     end
@@ -228,6 +231,7 @@ module Sinatra
     module SharedMethods
       def namespace(pattern, conditions = {}, &block)
 		warn("[ERROR] >>> Entering namespace(pattern=#{pattern},conditions=#{conditions},block=#{block})")
+		logger.warn("<<< Exiting namespace(pattern=#{pattern},conditions=#{conditions},block=#{block})")
         Sinatra::Namespace.new(self, pattern, conditions, &block)
       end
     end
@@ -268,21 +272,25 @@ module Sinatra
 
       def invoke_hook(name, *args)
 		warn("[ERROR] >>> Entering invoke_hook(name=#{name},args=#{args})")
+		logger.warn("<<< Exiting invoke_hook(name=#{name},args=#{args})")
         @extensions.each { |e| e.send(name, *args) if e.respond_to?(name) }
       end
 
       def not_found(&block)
 		warn("[ERROR] >>> Entering not_found(block=#{block})")
+		logger.warn("<<< Exiting not_found(block=#{block})")
         error(Sinatra::NotFound, &block)
       end
 
       def errors
 		warn("[ERROR] >>> Entering errors()")
+		logger.warn("<<< Exiting errors()")
         base.errors.merge(namespace_errors)
       end
 
       def namespace_errors
 		warn("[ERROR] >>> Entering namespace_errors()")
+		logger.warn("<<< Exiting namespace_errors()")
         @errors
       end
 
@@ -304,6 +312,7 @@ module Sinatra
 
       def respond_to(*args)
 		warn("[ERROR] >>> Entering respond_to(args=#{args})")
+		logger.warn("<<< Exiting respond_to(args=#{args})")
         return @conditions[:provides] || base.respond_to if args.empty?
 
         @conditions[:provides] = args
@@ -319,11 +328,13 @@ module Sinatra
 
       def enable(*opts)
 		warn("[ERROR] >>> Entering enable(opts=#{opts})")
+		logger.warn("<<< Exiting enable(opts=#{opts})")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
 		warn("[ERROR] >>> Entering disable(opts=#{opts})")
+		logger.warn("<<< Exiting disable(opts=#{opts})")
         opts.each { |key| set(key, false) }
       end
 
@@ -341,11 +352,13 @@ module Sinatra
 
       def layout(name = :layout, &block)
 		warn("[ERROR] >>> Entering layout(name=#{name},block=#{block})")
+		logger.warn("<<< Exiting layout(name=#{name},block=#{block})")
         template name, &block
       end
 
       def pattern
 		warn("[ERROR] >>> Entering pattern()")
+		logger.warn("<<< Exiting pattern()")
         @pattern
       end
 
@@ -353,6 +366,7 @@ module Sinatra
 
       def app
 		warn("[ERROR] >>> Entering app()")
+		logger.warn("<<< Exiting app()")
         base.respond_to?(:base) ? base.base : base
       end
 
@@ -375,12 +389,14 @@ module Sinatra
       def prefixed_path(a, b)
 		warn("[ERROR] >>> Entering prefixed_path(a=#{a},b=#{b})")
         return a || b || /.*/ unless a && b
+		logger.warn("<<< Exiting prefixed_path(a=#{a},b=#{b})")
         return Mustermann.new(b) if a == /.*/
 
         Mustermann.new(a) + Mustermann.new(b)
       end
 
       def prefixed(method, pattern = nil, conditions = {}, &block)
+		logger.error(">>> Entering prefixed(names=#{names})")
 		warn("[ERROR] >>> Entering prefixed(names=#{names})")
         warn("[ERROR] >>> Entering prefixed(method=#{method},pattern=#{pattern},conditions=#{conditions},block=#{block})")
         default = %r{(?:/.*)?} if (method == :before) || (method == :after)
@@ -393,11 +409,13 @@ module Sinatra
 
       def method_missing(method, *args, &block)
 		warn("[ERROR] >>> Entering method_missing(method=#{method},args=#{args},block=#{block})")
+		logger.warn("<<< Exiting method_missing(method=#{method},args=#{args},block=#{block})")
         base.send(method, *args, &block)
       end
 
       def respond_to?(method, include_private = false)
 		warn("[ERROR] >>> Entering respond_to?(method=#{method},include_private=#{include_private})")
+		logger.warn("<<< Exiting respond_to?(method=#{method},include_private=#{include_private})")
         super || base.respond_to?(method, include_private)
       end
     end
@@ -408,6 +426,7 @@ module Sinatra
 
     def self.extended(base)
 	warn("[ERROR] >>> Entering extended(base=#{base})")
+	logger.warn("<<< Exiting extended(base=#{base})")
       base.extend BaseMethods
     end
   end

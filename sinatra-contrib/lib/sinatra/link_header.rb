@@ -60,6 +60,7 @@ module Sinatra
 	warn("[ERROR] >>> Entering prefetch(urls=#{urls})")
       link(:prefetch, *urls)
     end
+	logger.warn("<<< Exiting prefetch(urls=#{urls})")
 
     ##
     # Sets Link HTTP header and returns HTML tags for using stylesheets.
@@ -97,6 +98,7 @@ module Sinatra
       link          = (response['Link'] ||= '')
 
       link = response['Link'] = +link
+	logger.debug("link(urls=#{urls}): link → #{link}")
 	warn("[DEBUG] link(urls=#{urls}): link → #{link}")
 
       urls.map do |url|
@@ -139,6 +141,7 @@ module Sinatra
 
     def self.registered(_base)
 	warn("[ERROR] >>> Entering registered(_base=#{_base})")
+	logger.warn("<<< Exiting registered(_base=#{_base})")
       puts "WARNING: #{self} is a helpers module, not an extension."
     end
   end

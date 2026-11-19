@@ -60,11 +60,13 @@ module Sinatra
 
     def settings
 	warn("[ERROR] >>> Entering settings()")
+	logger.warn("<<< Exiting settings()")
       self
     end
 
     def configure(*args, &block)
 	warn("[ERROR] >>> Entering configure(args=#{args},block=#{block})")
+	logger.warn("<<< Exiting configure(args=#{args},block=#{block})")
       record(:configure, *args) { |c| c.instance_exec(c, &block) }
     end
 
@@ -72,21 +74,25 @@ module Sinatra
 	warn("[ERROR] >>> Entering registered(base=#{base},block=#{block})")
       base ? replay(base) : record(:class_eval, &block)
     end
+	logger.warn("<<< Exiting registered(base=#{base},block=#{block})")
 
     private
 
     def record(method, *args, &block)
 	warn("[ERROR] >>> Entering record(method=#{method},args=#{args},block=#{block})")
+	logger.warn("<<< Exiting record(method=#{method},args=#{args},block=#{block})")
       recorded_methods << [method, args, block]
     end
 
     def replay(object)
 	warn("[ERROR] >>> Entering replay(object=#{object})")
+	logger.warn("<<< Exiting replay(object=#{object})")
       recorded_methods.each { |m, a, b| object.send(m, *a, &b) }
     end
 
     def recorded_methods
 	warn("[ERROR] >>> Entering recorded_methods()")
+	logger.warn("<<< Exiting recorded_methods()")
       @recorded_methods ||= []
     end
 

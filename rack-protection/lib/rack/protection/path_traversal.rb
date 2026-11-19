@@ -31,6 +31,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
         slash = '/'.encode(encoding)
         backslash = '\\'.encode(encoding)
 
+		warn("[DEBUG] cleanup(path=#{path}): slash → #{slash}")
 		warn("[DEBUG] cleanup(path=#{path}): dot → #{dot}")
 		warn("[DEBUG] cleanup(path=#{path}): encoding → #{encoding}")
         parts     = []

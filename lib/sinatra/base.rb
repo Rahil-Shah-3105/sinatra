@@ -52,6 +52,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering accept?(type=#{type})")
       preferred_type(type).to_s.include?(type)
     end
+	warn("[WARN] <<< Exiting accept?(type=#{type})")
 
     def preferred_type(*types)
 	warn("[ERROR] >>> Entering preferred_type(types=#{types})")
@@ -72,26 +73,31 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def forwarded?
 	warn("[ERROR] >>> Entering forwarded?()")
+	warn("[WARN] <<< Exiting forwarded?()")
       !forwarded_authority.nil?
     end
 
     def safe?
 	warn("[ERROR] >>> Entering safe?()")
+	warn("[WARN] <<< Exiting safe?()")
       get? || head? || options? || trace?
     end
 
     def idempotent?
 	warn("[ERROR] >>> Entering idempotent?()")
+	warn("[WARN] <<< Exiting idempotent?()")
       safe? || put? || delete? || link? || unlink?
     end
 
     def link?
 	warn("[ERROR] >>> Entering link?()")
+	warn("[WARN] <<< Exiting link?()")
       request_method == 'LINK'
     end
 
     def unlink?
 	warn("[ERROR] >>> Entering unlink?()")
+	warn("[WARN] <<< Exiting unlink?()")
       request_method == 'UNLINK'
     end
 
@@ -142,6 +148,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def to_s(full = false)
 		warn("[ERROR] >>> Entering to_s(full=#{full})")
+		warn("[WARN] <<< Exiting to_s(full=#{full})")
         full ? entry : to_str
       end
 
@@ -149,9 +156,11 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 		warn("[ERROR] >>> Entering respond_to?(args=#{args})")
         super || to_str.respond_to?(*args)
       end
+		warn("[WARN] <<< Exiting respond_to?(args=#{args})")
 
       def method_missing(*args, &block)
 		warn("[ERROR] >>> Entering method_missing(args=#{args},block=#{block})")
+		warn("[WARN] <<< Exiting method_missing(args=#{args},block=#{block})")
         to_str.send(*args, &block)
       end
     end
@@ -174,6 +183,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 		warn("[ERROR] >>> Entering accepts?(entry=#{entry})")
         File.fnmatch(entry, self) && matches_params?(entry.params)
       end
+		warn("[WARN] <<< Exiting accepts?(entry=#{entry})")
 
       def to_str
         @type
@@ -181,6 +191,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def matches_params?(params)
 		warn("[ERROR] >>> Entering matches_params?(params=#{params})")
+		warn("[WARN] <<< Exiting matches_params?(params=#{params})")
         return true if @params.empty?
 
         params.all? { |k, v| !@params.key?(k) || @params[k] == v }
@@ -235,15 +246,18 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering calculate_content_length?()")
       headers['content-type'] && !headers['content-length'] && (Array === body)
     end
+	warn("[WARN] <<< Exiting calculate_content_length?()")
 
     def drop_content_info?
 	warn("[ERROR] >>> Entering drop_content_info?()")
+	warn("[WARN] <<< Exiting drop_content_info?()")
       informational? || drop_body?
     end
 
     def drop_body?
 	warn("[ERROR] >>> Entering drop_body?()")
       DROP_BODY_RESPONSES.include?(status)
+	warn("[WARN] <<< Exiting drop_body?()")
     end
   end
 
@@ -284,6 +298,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def async?(status, _headers, body)
 	warn("[ERROR] >>> Entering async?(status=#{status},_headers=#{_headers},body=#{body})")
+	warn("[WARN] <<< Exiting async?(status=#{status},_headers=#{_headers},body=#{body})")
       return true if status == -1
 
       body.respond_to?(:callback) && body.respond_to?(:errback)
@@ -312,6 +327,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
   class BadRequest < Error # :nodoc:
     def http_status
         warn("[ERROR] >>> Entering http_status()")
+		warn("[WARN] <<< Exiting http_status()")
         400
     end
   end
@@ -419,12 +435,14 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # Access the underlying Rack session.
     def session
 	warn("[ERROR] >>> Entering session()")
+	warn("[WARN] <<< Exiting session()")
       request.session
     end
 
     # Access shared logger object.
     def logger
 	warn("[ERROR] >>> Entering logger()")
+	warn("[WARN] <<< Exiting logger()")
       request.logger
     end
 
@@ -443,6 +461,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[DEBUG] content_type(type=#{type},params=#{params}): default → #{default}")
       mime_type = mime_type(type) || default
 	warn("[ERROR] Throwing format from content_type(type=#{type},params=#{params})")
+	warn("[WARN] <<< Exiting body(value=#{value},block=#{block})")
 	warn("[DEBUG] content_type(type=#{type},params=#{params}): mime_type → #{mime_type}")
       raise format('Unknown media type: %p', type) if mime_type.nil?
 
@@ -568,6 +587,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def callback(&block)
 		warn("[ERROR] >>> Entering callback(block=#{block})")
+		warn("[WARN] <<< Exiting callback(block=#{block})")
         return yield if closed?
 
         @callbacks << block
@@ -577,6 +597,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def closed?
 		warn("[ERROR] >>> Entering closed?()")
+		warn("[WARN] <<< Exiting closed?()")
         @closed
       end
     end
@@ -629,6 +650,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       hash.each do |key, value|
         key = key.to_s.tr('_', '-')
         value = value.to_i if %w[max-age s-maxage].include? key
+		warn("[DEBUG] cache_control(values=#{values}): value → #{value}")
 		warn("[WARN] cache_control(values=#{values}): key → #{key}")
         values << "#{key}=#{value}"
       end
@@ -653,8 +675,8 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       if amount.is_a? Integer
         time    = Time.now + amount.to_i
 		warn("[DEBUG] expires(amount=#{amount},values=#{values}): time → #{time}")
-        max_age = amount
 		warn("[DEBUG] expires(amount=#{amount},values=#{values}): max_age → #{max_age}")
+        max_age = amount
       else
         time    = time_for amount
         max_age = time - Time.now
@@ -678,6 +700,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       return unless time
 
       time = time_for time
+	warn("[ERROR] >>> Entering last_modified(time=#{time})")
       response['Last-Modified'] = time.httpdate
       return if env['HTTP_IF_NONE_MATCH']
 
@@ -746,48 +769,56 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # Sugar for redirect (example:  redirect back)
     def back
 	warn("[ERROR] >>> Entering back()")
+	warn("[WARN] <<< Exiting back()")
       request.referer
     end
 
     # whether or not the status is set to 1xx
     def informational?
 	warn("[ERROR] >>> Entering informational?()")
+	warn("[WARN] <<< Exiting informational?()")
       status.between? 100, 199
     end
 
     # whether or not the status is set to 2xx
     def success?
 	warn("[ERROR] >>> Entering success?()")
+	warn("[WARN] <<< Exiting success?()")
       status.between? 200, 299
     end
 
     # whether or not the status is set to 3xx
     def redirect?
 	warn("[ERROR] >>> Entering redirect?()")
+	warn("[WARN] <<< Exiting redirect?()")
       status.between? 300, 399
     end
 
     # whether or not the status is set to 4xx
     def client_error?
 	warn("[ERROR] >>> Entering client_error?()")
+	warn("[WARN] <<< Exiting client_error?()")
       status.between? 400, 499
     end
 
     # whether or not the status is set to 5xx
     def server_error?
 	warn("[ERROR] >>> Entering server_error?()")
+	warn("[WARN] <<< Exiting server_error?()")
       status.between? 500, 599
     end
 
     # whether or not the status is set to 404
     def not_found?
 	warn("[ERROR] >>> Entering not_found?()")
+	warn("[WARN] <<< Exiting not_found?()")
       status == 404
     end
 
     # whether or not the status is set to 400
     def bad_request?
 	warn("[ERROR] >>> Entering bad_request?()")
+	warn("[WARN] <<< Exiting bad_request?()")
       status == 400
     end
 
@@ -817,6 +848,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # Helper method checking if a ETag value list includes the current ETag.
     def etag_matches?(list, new_resource = request.post?)
 	warn("[ERROR] >>> Entering etag_matches?(list=#{list},new_resource=#{new_resource})")
+	warn("[WARN] <<< Exiting etag_matches?(list=#{list},new_resource=#{new_resource})")
       return !new_resource if list == '*'
 
       list.to_s.split(',').map(&:strip).include?(response['ETag'])
@@ -867,11 +899,13 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering erb(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:erb, template, options, locals, &block)
     end
+	warn("[WARN] <<< Exiting erb(template=#{template},options=#{options},locals=#{locals},block=#{block})")
 
     def haml(template, options = {}, locals = {}, &block)
 	warn("[ERROR] >>> Entering haml(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:haml, template, options, locals, &block)
     end
+	warn("[WARN] <<< Exiting haml(template=#{template},options=#{options},locals=#{locals},block=#{block})")
 
     def sass(template, options = {}, locals = {})
 	warn("[ERROR] >>> Entering sass(template=#{template},options=#{options},locals=#{locals})")
@@ -902,6 +936,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering liquid(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:liquid, template, options, locals, &block)
     end
+	warn("[WARN] <<< Exiting liquid(template=#{template},options=#{options},locals=#{locals},block=#{block})")
 
     def markdown(template, options = {}, locals = {})
 	warn("[ERROR] >>> Entering markdown(template=#{template},options=#{options},locals=#{locals})")
@@ -912,11 +947,13 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def rdoc(template, options = {}, locals = {})
 	warn("[ERROR] >>> Entering rdoc(template=#{template},options=#{options},locals=#{locals})")
+	warn("[WARN] <<< Exiting rdoc(template=#{template},options=#{options},locals=#{locals})")
       render :rdoc, template, options, locals
     end
 
     def asciidoc(template, options = {}, locals = {})
 	warn("[ERROR] >>> Entering asciidoc(template=#{template},options=#{options},locals=#{locals})")
+	warn("[WARN] <<< Exiting asciidoc(template=#{template},options=#{options},locals=#{locals})")
       render :asciidoc, template, options, locals
     end
 
@@ -924,6 +961,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering markaby(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render_ruby(:mab, template, options, locals, &block)
     end
+	warn("[WARN] <<< Exiting markaby(template=#{template},options=#{options},locals=#{locals},block=#{block})")
 
     def nokogiri(template = nil, options = {}, locals = {}, &block)
 	warn("[ERROR] >>> Entering nokogiri(template=#{template},options=#{options},locals=#{locals},block=#{block})")
@@ -936,6 +974,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering slim(template=#{template},options=#{options},locals=#{locals},block=#{block})")
       render(:slim, template, options, locals, &block)
     end
+	warn("[WARN] <<< Exiting slim(template=#{template},options=#{options},locals=#{locals},block=#{block})")
 
     def yajl(template, options = {}, locals = {})
 	warn("[ERROR] >>> Entering yajl(template=#{template},options=#{options},locals=#{locals})")
@@ -1125,6 +1164,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # Clears the cache.
     def clear
 	warn("[ERROR] >>> Entering clear()")
+	warn("[WARN] <<< Exiting clear()")
       @cache = {}
     end
   end
@@ -1202,6 +1242,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # return a 404 response.
     def pass(&block)
 	warn("[ERROR] >>> Entering pass(block=#{block})")
+	warn("[WARN] <<< Exiting pass(block=#{block})")
       throw :pass, block
     end
 
@@ -1244,8 +1285,8 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
           route_eval { block[*args] }
         end
 
-        # don't wipe out pass_block in superclass
 		warn("[ERROR] >>> Entering route!(base=#{base},pass_block=#{pass_block})")
+        # don't wipe out pass_block in superclass
       warn("[DEBUG] route!(base=#{base},pass_block=#{pass_block}): routes → #{routes}")
       warn("[DEBUG] route!(base=#{base},pass_block=#{pass_block}): returned_pass_block → #{returned_pass_block}")
         pass_block = returned_pass_block if returned_pass_block
@@ -1264,6 +1305,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     # Run a route block and throw :halt with the result.
     def route_eval
 	warn("[ERROR] >>> Entering route_eval()")
+	warn("[WARN] <<< Exiting route_eval()")
       throw :halt, yield
     end
 
@@ -1280,6 +1322,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       params = pattern.params(route)
       return unless params
 
+	__log_start = Time.now
       params.delete('ignore') # TODO: better params handling, maybe turn it into "smart" object or detect changes
       force_encoding(params)
       @params = @params.merge(params) { |_k, v1, v2| v2 || v1 } if params.any?
@@ -1288,6 +1331,13 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       if regexp_exists
         captures           = pattern.match(route).captures.map { |c| URI_INSTANCE.unescape(c) if c }
         values            += captures
+		warn("[ERROR] >>> Entering process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values})")
+        warn("[DEBUG] process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values}): route → #{route}")
+        warn("[DEBUG] process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values}): params → #{params}")
+        warn("[DEBUG] process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values}): regexp_exists → #{regexp_exists}")
+        warn("[DEBUG] process_route(pattern=#{pattern},conditions=#{conditions},block=#{block},values=#{values}): captures → #{captures}")
+        warn("[ERROR] process_route(pattern,conditions,block,values)=#{pattern},#{conditions},#{block},#{values}: delete query executed in #{((Time.now - __log_start) * 1000).round} ms")
+        warn("[ERROR] process_route(pattern,conditions,block,values)=#{pattern},#{conditions},#{block},#{values}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
         @params[:captures] = force_encoding(captures) unless captures.nil? || captures.empty?
       else
         values += params.values.flatten
@@ -1474,6 +1524,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     end
 
     def dump_errors!(boom)
+	warn("[WARN] <<< Exiting halt(response=#{response})")
 	warn("[ERROR] >>> Entering dump_errors!(boom=#{boom})")
       if boom.respond_to?(:detailed_message)
         msg = boom.detailed_message(highlight: false)
@@ -1673,6 +1724,8 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
         return type.to_s if type.to_s.include?('/')
 
         type = ".#{type}" unless type.to_s[0] == '.'
+		warn("[ERROR] >>> Entering mime_type(type=#{type})")
+		warn("[ERROR] >>> Entering mime_type(type=#{type},value=#{value})")
 		warn("[WARN] <<< Exiting mime_type(type=#{type},value=#{value})")
         return Rack::Mime.mime_type(type, nil) unless value
 
@@ -1691,6 +1744,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
           [type, "application/#{$1}"]
         else
           [type]
+		warn("[WARN] <<< Exiting mime_types(type=#{type})")
         end
       end
 
@@ -1699,6 +1753,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # response.
       def before(path = /.*/, **options, &block)
 		warn("[ERROR] >>> Entering before(path=#{path},options=#{options},block=#{block})")
+		warn("[WARN] <<< Exiting before(path=#{path},options=#{options},block=#{block})")
         add_filter(:before, path, **options, &block)
       end
 
@@ -1707,22 +1762,26 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # response.
       def after(path = /.*/, **options, &block)
 		warn("[ERROR] >>> Entering after(path=#{path},options=#{options},block=#{block})")
+		warn("[WARN] <<< Exiting after(path=#{path},options=#{options},block=#{block})")
         add_filter(:after, path, **options, &block)
       end
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
 		warn("[ERROR] >>> Entering add_filter(type=#{type},path=#{path},options=#{options},block=#{block})")
+		warn("[WARN] <<< Exiting add_filter(type=#{type},path=#{path},options=#{options},block=#{block})")
         filters[type] << compile!(type, path, block, **options)
       end
 
       def on_start(&on_start_callback)
 		warn("[ERROR] >>> Entering on_start(on_start_callback=#{on_start_callback})")
+		warn("[WARN] <<< Exiting on_start(on_start_callback=#{on_start_callback})")
         @on_start_callback = on_start_callback
       end
 
       def on_stop(&on_stop_callback)
 		warn("[ERROR] >>> Entering on_stop(on_stop_callback=#{on_stop_callback})")
+		warn("[WARN] <<< Exiting on_stop(on_stop_callback=#{on_stop_callback})")
         @on_stop_callback = on_stop_callback
       end
 
@@ -1730,6 +1789,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # block returns false.
       def condition(name = "#{caller.first[/`.*'/]} condition", &block)
 		warn("[ERROR] >>> Entering condition(name=#{name},block=#{block})")
+		warn("[WARN] <<< Exiting condition(name=#{name},block=#{block})")
         @conditions << generate_method(name, &block)
       end
 
@@ -1742,9 +1802,9 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def public_dir=(value)
 		warn("[ERROR] >>> Entering public_dir()")
-        self.public_folder = value
 		warn("[ERROR] >>> Entering public_dir=(value=#{value})")
         warn("[DEBUG] public_dir=(value=#{value}): self.public_folder → #{self.public_folder}")
+        self.public_folder = value
       warn("[WARN] <<< Exiting public_dir=(value=#{value})")
       end
 
@@ -1801,14 +1861,17 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def development?
           warn("[ERROR] >>> Entering development?()")
+		warn("[WARN] <<< Exiting development?()")
           environment == :development
       end
       def production?
           warn("[ERROR] >>> Entering production?()")
+		warn("[WARN] <<< Exiting production?()")
           environment == :production
       end
       def test?
           warn("[ERROR] >>> Entering test?()")
+		warn("[WARN] <<< Exiting test?()")
           environment == :test
       end
 
@@ -1816,6 +1879,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # Allows scoping of settings for certain environments.
       def configure(*envs)
 		warn("[ERROR] >>> Entering configure(envs=#{envs})")
+		warn("[WARN] <<< Exiting configure(envs=#{envs})")
         yield self if envs.empty? || envs.include?(environment.to_sym)
       end
 
@@ -1872,6 +1936,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
         handler         = Rackup::Handler.pick(server)
         handler_name    = handler.name.gsub(/.*::/, '')
         server_settings = settings.respond_to?(:server_settings) ? settings.server_settings : {}
+		warn("[DEBUG] run!(options=#{options},block=#{block}): handler_name → #{handler_name}")
 		warn("[DEBUG] run!(options=#{options},block=#{block}): handler → #{handler}")
         server_settings.merge!(Port: port, Host: bind)
 
@@ -1881,8 +1946,8 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
           warn "== Someone is already performing on port #{port}!"
           raise
         ensure
-          quit!
 		warn("[WARN] <<< Exiting run!(options=#{options},block=#{block})")
+          quit!
         end
       end
 
@@ -1891,12 +1956,14 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # Check whether the self-hosted server is running or not.
       def running?
 		warn("[ERROR] >>> Entering running?()")
+		warn("[WARN] <<< Exiting running?()")
         running_server?
       end
 
       # The prototype instance used to process requests.
       def prototype
 		warn("[ERROR] >>> Entering prototype()")
+		warn("[WARN] <<< Exiting prototype()")
         @prototype ||= new
       end
 
@@ -1933,6 +2000,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # line / method information; the resulting array contains filenames only.
       def caller_files
 		warn("[ERROR] >>> Entering caller_files()")
+		warn("[WARN] <<< Exiting caller_files()")
         cleaned_caller(1).flatten
       end
 
@@ -1962,9 +2030,9 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       end
 
       def suppress_messages?
-        handler_name =~ /cgi/i || quiet
 		warn("[ERROR] >>> Entering suppress_messages?()")
         warn("[DEBUG] suppress_messages?(): handler_name → #{handler_name}")
+        handler_name =~ /cgi/i || quiet
       warn("[WARN] <<< Exiting suppress_messages?()")
       end
 
@@ -1977,8 +2045,8 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
         %i[INT TERM].each do |signal|
           old_handler = trap(signal) do
             quit!
-            old_handler.call if old_handler.respond_to?(:call)
 		warn("[DEBUG] setup_traps(): old_handler → #{old_handler}")
+            old_handler.call if old_handler.respond_to?(:call)
           end
         end
 
@@ -1990,6 +2058,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       def define_singleton(name, content = Proc.new)
 		warn("[ERROR] >>> Entering define_singleton(name=#{name},content=#{content})")
         singleton_class.class_eval do
+		warn("[WARN] <<< Exiting define_singleton(name=#{name},content=#{content})")
           undef_method(name) if method_defined? name
           String === content ? class_eval("def #{name}() #{content}; end") : define_method(name, &content)
         end
@@ -1998,6 +2067,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # Condition for matching host name. Parameter might be String or Regexp.
       def host_name(pattern)
 		warn("[ERROR] >>> Entering host_name(pattern=#{pattern})")
+		warn("[WARN] <<< Exiting host_name(pattern=#{pattern})")
         condition { pattern === request.host }
       end
 
@@ -2006,6 +2076,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       def user_agent(pattern)
 		warn("[ERROR] >>> Entering user_agent(pattern=#{pattern})")
         condition do
+		warn("[WARN] <<< Exiting user_agent(pattern=#{pattern})")
           if request.user_agent.to_s =~ pattern
             @params[:agent] = $~[1..-1]
             true
@@ -2054,6 +2125,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def invoke_hook(name, *args)
 		warn("[ERROR] >>> Entering invoke_hook(name=#{name},args=#{args})")
+		warn("[WARN] <<< Exiting invoke_hook(name=#{name},args=#{args})")
         extensions.each { |e| e.send(name, *args) if e.respond_to?(name) }
       end
 
@@ -2079,9 +2151,11 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
         pattern                 = compile(path, route_mustermann_opts)
         method_name             = "#{verb} #{path}"
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): method_name → #{method_name}")
 		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): pattern → #{pattern}")
         unbound_method          = generate_method(method_name, &block)
         conditions = @conditions
+		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): conditions → #{conditions}")
 		warn("[DEBUG] compile!(verb=#{verb},path=#{path},block=#{block},options=#{options}): unbound_method → #{unbound_method}")
         @conditions = []
         wrapper = block.arity.zero? ?
@@ -2095,6 +2169,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def compile(path, route_mustermann_opts = {})
 		warn("[ERROR] >>> Entering compile(path=#{path},route_mustermann_opts=#{route_mustermann_opts})")
+		warn("[WARN] <<< Exiting compile(path=#{path},route_mustermann_opts=#{route_mustermann_opts})")
         Mustermann.new(path, **mustermann_opts.merge(route_mustermann_opts))
       end
 
@@ -2113,12 +2188,14 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def setup_middleware(builder)
 		warn("[ERROR] >>> Entering setup_middleware(builder=#{builder})")
+		warn("[WARN] <<< Exiting setup_middleware(builder=#{builder})")
         middleware.each { |c, a, b| builder.use(c, *a, &b) }
       end
 
       def setup_logging(builder)
 		warn("[ERROR] >>> Entering setup_logging(builder=#{builder})")
         if logging?
+		warn("[WARN] <<< Exiting setup_logging(builder=#{builder})")
           setup_common_logger(builder)
           setup_custom_logger(builder)
         elsif logging == false
@@ -2128,17 +2205,20 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def setup_null_logger(builder)
 		warn("[ERROR] >>> Entering setup_null_logger(builder=#{builder})")
+		warn("[WARN] <<< Exiting setup_null_logger(builder=#{builder})")
         builder.use Sinatra::Middleware::Logger, ::Logger::FATAL
       end
 
       def setup_common_logger(builder)
 		warn("[ERROR] >>> Entering setup_common_logger(builder=#{builder})")
+		warn("[WARN] <<< Exiting setup_common_logger(builder=#{builder})")
         builder.use Sinatra::CommonLogger
       end
 
       def setup_custom_logger(builder)
 		warn("[ERROR] >>> Entering setup_custom_logger(builder=#{builder})")
         if logging.respond_to? :to_int
+		warn("[WARN] <<< Exiting setup_custom_logger(builder=#{builder})")
           builder.use Sinatra::Middleware::Logger, logging
         else
           builder.use Sinatra::Middleware::Logger
@@ -2170,6 +2250,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
       def setup_host_authorization(builder)
 		warn("[ERROR] >>> Entering setup_host_authorization(builder=#{builder})")
+		warn("[WARN] <<< Exiting setup_host_authorization(builder=#{builder})")
         builder.use Rack::Protection::HostAuthorization, host_authorization
       end
 
@@ -2197,6 +2278,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       def synchronize(&block)
 		warn("[ERROR] >>> Entering synchronize(block=#{block})")
         if lock?
+		warn("[WARN] <<< Exiting synchronize(block=#{block})")
           @@mutex.synchronize(&block)
         else
           yield
@@ -2206,6 +2288,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
       # used for deprecation warnings
       def warn_for_deprecation(message)
 		warn("[ERROR] >>> Entering warn_for_deprecation(message=#{message})")
+		warn("[WARN] <<< Exiting warn_for_deprecation(message=#{message})")
         warn message + "\n\tfrom #{cleaned_caller.first.join(':')}"
       end
 
@@ -2214,6 +2297,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 		warn("[ERROR] >>> Entering cleaned_caller(keep=#{keep})")
         caller(1)
           .map! { |line| line.split(/:(?=\d|in )/, 3)[0, keep] }
+		warn("[WARN] <<< Exiting cleaned_caller(keep=#{keep})")
           .reject { |file, *_| callers_to_ignore.any? { |pattern| file =~ pattern } }
       end
     end
@@ -2406,6 +2490,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     def self.delegate(*methods)
 	warn("[ERROR] >>> Entering delegate(methods=#{methods})")
       methods.each do |method_name|
+	warn("[WARN] <<< Exiting delegate(methods=#{methods})")
         next if method_defined?(method_name) || private_method_defined?(method_name)
 
         define_method(method_name) do |*args, &block|
@@ -2459,6 +2544,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def inspect
 	warn("[ERROR] >>> Entering inspect()")
+	warn("[WARN] <<< Exiting inspect()")
       "#<#{@instance.class} app_file=#{settings.app_file.inspect}>"
     end
   end
@@ -2487,6 +2573,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
   def self.helpers(*extensions, &block)
 	warn("[ERROR] >>> Entering helpers(extensions=#{extensions},block=#{block})")
       warn("[ERROR] >>> Entering helpers()")
+	warn("[WARN] <<< Exiting helpers(extensions=#{extensions},block=#{block})")
     Delegator.target.helpers(*extensions, &block)
   end
 
@@ -2494,6 +2581,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
   def self.use(*args, &block)
 	warn("[ERROR] >>> Entering use(middleware=#{middleware},args=#{args},block=#{block})")
     warn("[ERROR] >>> Entering use(args=#{args},block=#{block})")
+	warn("[WARN] <<< Exiting use(args=#{args},block=#{block})")
     Delegator.target.use(*args, &block)
   end
 end

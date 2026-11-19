@@ -111,11 +111,13 @@ module Rack
       # form that should include the current authenticity token.
       def self.token(session, path: nil, method: :post)
 		warn("[ERROR] >>> Entering token(session=#{session},path=#{path},method=#{method})")
+		warn("[WARN] <<< Exiting token(session=#{session},path=#{path},method=#{method})")
         new(nil).mask_authenticity_token(session, path: path, method: method)
       end
 
       def self.random_token
 		warn("[ERROR] >>> Entering random_token()")
+		warn("[WARN] <<< Exiting random_token()")
         SecureRandom.urlsafe_base64(TOKEN_LENGTH, padding: false)
       end
 
@@ -156,6 +158,7 @@ module Rack
 
       def set_token(session)
 		warn("[ERROR] >>> Entering set_token(session=#{session})")
+		warn("[WARN] <<< Exiting set_token(session=#{session})")
         session[options[:key]] ||= self.class.random_token
       end
 
@@ -187,8 +190,8 @@ module Rack
             compare_with_real_token(token, session) ||
             compare_with_per_form_token(token, session, Request.new(env))
         else
-          false # Token is malformed
 		warn("[WARN] <<< Exiting valid_token?(env=#{env},token=<redacted>)")
+          false # Token is malformed
         end
       end
 
@@ -200,6 +203,7 @@ module Rack
         one_time_pad = SecureRandom.random_bytes(token.length)
         encrypted_token = xor_byte_strings(one_time_pad, token)
         masked_token = one_time_pad + encrypted_token
+		warn("[DEBUG] mask_token(token=<redacted>): one_time_pad → #{one_time_pad}")
 		warn("[WARN] <<< Exiting mask_token(token=<redacted>)")
         encode_token(masked_token)
       end
@@ -221,21 +225,25 @@ module Rack
 
       def unmasked_token?(token)
 		warn("[ERROR] >>> Entering unmasked_token?(token=<redacted>)")
+		warn("[WARN] <<< Exiting unmasked_token?(token=<redacted>)")
         token.length == TOKEN_LENGTH
       end
 
       def masked_token?(token)
 		warn("[ERROR] >>> Entering masked_token?(token=<redacted>)")
+		warn("[WARN] <<< Exiting masked_token?(token=<redacted>)")
         token.length == TOKEN_LENGTH * 2
       end
 
       def compare_with_real_token(token, session)
 		warn("[ERROR] >>> Entering compare_with_real_token(token=<redacted>,session=#{session})")
+		warn("[WARN] <<< Exiting compare_with_real_token(token=<redacted>,session=#{session})")
         secure_compare(token, real_token(session))
       end
 
       def compare_with_global_token(token, session)
 		warn("[ERROR] >>> Entering compare_with_global_token(token=<redacted>,session=#{session})")
+		warn("[WARN] <<< Exiting compare_with_global_token(token=<redacted>,session=#{session})")
         secure_compare(token, global_token(session))
       end
 
@@ -247,26 +255,31 @@ module Rack
 
       def real_token(session)
 		warn("[ERROR] >>> Entering real_token(session=#{session})")
+		warn("[WARN] <<< Exiting real_token(session=#{session})")
         decode_token(session[options[:key]])
       end
 
       def global_token(session)
 		warn("[ERROR] >>> Entering global_token(session=#{session})")
+		warn("[WARN] <<< Exiting global_token(session=#{session})")
         token_hmac(session, GLOBAL_TOKEN_IDENTIFIER)
       end
 
       def per_form_token(session, path, method)
 		warn("[ERROR] >>> Entering per_form_token(session=#{session},path=#{path},method=#{method})")
+		warn("[WARN] <<< Exiting per_form_token(session=#{session},path=#{path},method=#{method})")
         token_hmac(session, "#{path}##{method.downcase}")
       end
 
       def encode_token(token)
 		warn("[ERROR] >>> Entering encode_token(token=<redacted>)")
+		warn("[WARN] <<< Exiting encode_token(token=<redacted>)")
         Base64.urlsafe_encode64(token)
       end
 
       def decode_token(token)
 		warn("[ERROR] >>> Entering decode_token(token=<redacted>)")
+		warn("[WARN] <<< Exiting decode_token(token=<redacted>)")
         Base64.urlsafe_decode64(token)
       end
 

@@ -17,6 +17,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
       def accepts?(env)
 		warn("[ERROR] >>> Entering accepts?(env=#{env})")
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         safe?(env) or referrer(env) == Request.new(env).host
       end
     end

@@ -36,6 +36,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
       def encode(value)
 		warn("[ERROR] >>> Entering encode(value=#{value})")
+		warn("[WARN] <<< Exiting encode(value=#{value})")
         value.to_s.downcase
       end
     end

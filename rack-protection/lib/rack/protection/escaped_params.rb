@@ -102,6 +102,7 @@ module Rack
         request  = Request.new(env)
         get_was  = handle(request.GET)
         post_was = begin
+		warn("[DEBUG] call(env=#{env}): request → #{request}")
 		warn("[DEBUG] call(env=#{env}): get_was → #{get_was}")
           handle(request.POST)
         rescue StandardError

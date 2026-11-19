@@ -54,6 +54,7 @@ module Rack
       # See #default_reaction.
       def self.default_reaction(reaction)
 		warn("[ERROR] >>> Entering default_reaction(reaction=#{reaction})")
+		warn("[WARN] <<< Exiting default_reaction(reaction=#{reaction})")
         alias_method(:default_reaction, reaction)
       end
 
@@ -64,6 +65,7 @@ module Rack
       def initialize(app, options = {})
 		warn("[ERROR] >>> Entering initialize(app=#{app},options=#{options})")
         @app = app
+		warn("[WARN] <<< Exiting initialize(app=#{app},options=#{options})")
         @options = default_options.merge(options)
       end
 
@@ -75,6 +77,7 @@ module Rack
 
       def accepts?(env)
 		warn("[ERROR] >>> Entering accepts?(env=#{env})")
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         raise NotImplementedError, "#{self.class} implementation pending"
       end
 
@@ -144,6 +147,7 @@ module Rack
 
       def session?(env)
 		warn("[ERROR] >>> Entering session?(env=#{env})")
+		warn("[WARN] <<< Exiting session?(env=#{env})")
         env.include? options[:session_key]
       end
 
@@ -181,6 +185,7 @@ module Rack
 
       def origin(env)
 		warn("[ERROR] >>> Entering origin(env=#{env})")
+		warn("[WARN] <<< Exiting origin(env=#{env})")
         env['HTTP_ORIGIN'] || env['HTTP_X_ORIGIN']
       end
 
@@ -195,11 +200,13 @@ module Rack
 
       def encrypt(value)
 		warn("[ERROR] >>> Entering encrypt(value=#{value})")
+		warn("[WARN] <<< Exiting encrypt(value=#{value})")
         options[:encryptor].hexdigest value.to_s
       end
 
       def secure_compare(a, b)
 		warn("[ERROR] >>> Entering secure_compare(a=#{a},b=#{b})")
+		warn("[WARN] <<< Exiting secure_compare(a=#{a},b=#{b})")
         Rack::Utils.secure_compare(a.to_s, b.to_s)
       end
 
@@ -207,6 +214,7 @@ module Rack
 
       def html?(headers)
 		warn("[ERROR] >>> Entering html?(headers=#{headers})")
+		warn("[WARN] <<< Exiting html?(headers=#{headers})")
         return false unless (header = headers.detect { |k, _v| k.downcase == 'content-type' })
 
         options[:html_types].include? header.last[%r{^\w+/\w+}]

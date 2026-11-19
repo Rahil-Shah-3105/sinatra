@@ -34,6 +34,7 @@ module Sinatra
   module WebDAV
     def self.registered(_)
 	warn("[ERROR] >>> Entering registered(_=#{_})")
+	logger.warn("<<< Exiting registered(_=#{_})")
       Sinatra::Request.include WebDAV::Request
     end
 
@@ -47,11 +48,13 @@ module Sinatra
 
           def safe?
 			warn("[ERROR] >>> Entering safe?()")
+			logger.warn("<<< Exiting safe?()")
             _safe? or propfind?
           end
 
           def idempotent?
 			warn("[ERROR] >>> Entering idempotent?()")
+			logger.warn("<<< Exiting idempotent?()")
             _idempotent? or propfind? or move? or unlock? # or lock?
           end
         end
@@ -59,26 +62,31 @@ module Sinatra
 
       def propfind?
 		warn("[ERROR] >>> Entering propfind?()")
+		logger.warn("<<< Exiting propfind?()")
         request_method == 'PROPFIND'
       end
 
       def proppatch?
 		warn("[ERROR] >>> Entering proppatch?()")
+		logger.warn("<<< Exiting proppatch?()")
         request_method == 'PROPPATCH'
       end
 
       def mkcol?
 		warn("[ERROR] >>> Entering mkcol?()")
+		logger.warn("<<< Exiting mkcol?()")
         request_method == 'MKCOL'
       end
 
       def copy?
 		warn("[ERROR] >>> Entering copy?()")
+		logger.warn("<<< Exiting copy?()")
         request_method == 'COPY'
       end
 
       def move?
 		warn("[ERROR] >>> Entering move?()")
+		logger.warn("<<< Exiting move?()")
         request_method == 'MOVE'
       end
 
@@ -88,6 +96,7 @@ module Sinatra
 
       def unlock?
 		warn("[ERROR] >>> Entering unlock?()")
+		logger.warn("<<< Exiting unlock?()")
         request_method == 'UNLOCK'
       end
     end

@@ -20,6 +20,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     class FormToken < AuthenticityToken
       def accepts?(env)
 		warn("[ERROR] >>> Entering accepts?(env=#{env})")
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest' or super
       end
     end

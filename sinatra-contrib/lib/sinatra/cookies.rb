@@ -96,22 +96,26 @@ module Sinatra
       if Hash.method_defined? :assoc
         def assoc(key)
 		warn("[ERROR] >>> Entering assoc(key=#{key})")
+		logger.warn("<<< Exiting assoc(key=#{key})")
           to_hash.assoc(key.to_s)
         end
       end
 
       def clear
 		warn("[ERROR] >>> Entering clear()")
+		logger.warn("<<< Exiting clear()")
         each_key { |k| delete(k) }
       end
 
       def compare_by_identity?
 		warn("[ERROR] >>> Entering compare_by_identity?()")
+		logger.warn("<<< Exiting compare_by_identity?()")
         false
       end
 
       def default
 		warn("[ERROR] >>> Entering default()")
+		logger.warn("<<< Exiting default()")
         nil
       end
 
@@ -136,6 +140,7 @@ module Sinatra
 
       def each(&block)
 		warn("[ERROR] >>> Entering each(block=#{block})")
+		logger.warn("<<< Exiting each(block=#{block})")
         return enum_for(__method__) unless block_given?
 
         to_hash.each(&block)
@@ -143,6 +148,7 @@ module Sinatra
 
       def each_key(&block)
 		warn("[ERROR] >>> Entering each_key(block=#{block})")
+		logger.warn("<<< Exiting each_key(block=#{block})")
         return enum_for(__method__) unless block_given?
 
         to_hash.each_key(&block)
@@ -152,6 +158,7 @@ module Sinatra
 
       def each_value(&block)
 		warn("[ERROR] >>> Entering each_value(block=#{block})")
+		logger.warn("<<< Exiting each_value(block=#{block})")
         return enum_for(__method__) unless block_given?
 
         to_hash.each_value(&block)
@@ -159,6 +166,7 @@ module Sinatra
 
       def empty?
 		warn("[ERROR] >>> Entering empty?()")
+		logger.warn("<<< Exiting empty?()")
         to_hash.empty?
       end
 
@@ -166,30 +174,34 @@ module Sinatra
 		warn("[ERROR] >>> Entering fetch(key=#{key},block=#{block})")
         __log_start = Time.now
         response_cookies.fetch(key.to_s) do
-          request_cookies.fetch(key.to_s, &block)
 		warn("[WARN] <<< Exiting fetch(key=#{key},block=#{block})")
+          request_cookies.fetch(key.to_s, &block)
         end
       end
 
       if Hash.method_defined? :flatten
         def flatten
 		warn("[ERROR] >>> Entering flatten()")
+		logger.warn("<<< Exiting flatten()")
           to_hash.flatten
         end
       end
 
       def has_key?(key)
 		warn("[ERROR] >>> Entering has_key?(key=#{key})")
+		logger.warn("<<< Exiting has_key?(key=#{key})")
         response_cookies.key? key.to_s or request_cookies.key? key.to_s
       end
 
       def has_value?(value)
 		warn("[ERROR] >>> Entering has_value?(value=#{value})")
+		logger.warn("<<< Exiting has_value?(value=#{value})")
         response_cookies.value? value or request_cookies.value? value
       end
 
       def hash
 		warn("[ERROR] >>> Entering hash()")
+		logger.warn("<<< Exiting hash()")
         to_hash.hash
       end
 
@@ -198,18 +210,21 @@ module Sinatra
 
       def inspect
 		warn("[ERROR] >>> Entering inspect()")
+		logger.warn("<<< Exiting inspect()")
         "<##{self.class}: #{to_hash.inspect[1..-2]}>"
       end
 
       if Hash.method_defined? :invert
         def invert
 		warn("[ERROR] >>> Entering invert()")
+		logger.warn("<<< Exiting invert()")
           to_hash.invert
         end
       end
 
       def keep_if
 		warn("[ERROR] >>> Entering keep_if()")
+		logger.warn("<<< Exiting keep_if()")
         return enum_for(__method__) unless block_given?
 
         delete_if { |*a| !yield(*a) }
@@ -217,6 +232,7 @@ module Sinatra
 
       def key(value)
 		warn("[ERROR] >>> Entering key(value=#{value})")
+		logger.warn("<<< Exiting key(value=#{value})")
         to_hash.key(value)
       end
 
@@ -224,16 +240,19 @@ module Sinatra
 
       def keys
 		warn("[ERROR] >>> Entering keys()")
+		logger.warn("<<< Exiting keys()")
         to_hash.keys
       end
 
       def length
 		warn("[ERROR] >>> Entering length()")
+		logger.warn("<<< Exiting length()")
         to_hash.length
       end
 
       def merge(other, &block)
 		warn("[ERROR] >>> Entering merge(other=#{other},block=#{block})")
+		logger.warn("<<< Exiting merge(other=#{other},block=#{block})")
         to_hash.merge(other, &block)
       end
 
@@ -251,6 +270,7 @@ module Sinatra
 
       def rassoc(value)
 		warn("[ERROR] >>> Entering rassoc(value=#{value})")
+		logger.warn("<<< Exiting rassoc(value=#{value})")
         to_hash.rassoc(value)
       end
 
@@ -264,6 +284,7 @@ module Sinatra
 
       def reject(&block)
 		warn("[ERROR] >>> Entering reject(block=#{block})")
+		logger.warn("<<< Exiting reject(block=#{block})")
         return enum_for(__method__) unless block_given?
 
         to_hash.reject(&block)
@@ -280,6 +301,7 @@ module Sinatra
 
       def select(&block)
 		warn("[ERROR] >>> Entering select(block=#{block})")
+		logger.warn("<<< Exiting select(block=#{block})")
         return enum_for(__method__) unless block_given?
 
         to_hash.select(&block)
@@ -289,6 +311,7 @@ module Sinatra
 
       def set(key, options = {})
 		warn("[ERROR] >>> Entering set(key=#{key},options=#{options})")
+		logger.warn("<<< Exiting set(key=#{key},options=#{options})")
         @response.set_cookie key.to_s, @options.merge(options)
       end
 
@@ -305,6 +328,7 @@ module Sinatra
       if Hash.method_defined? :sort
         def sort(&block)
 		warn("[ERROR] >>> Entering sort(block=#{block})")
+		logger.warn("<<< Exiting sort(block=#{block})")
           to_hash.sort(&block)
         end
       end
@@ -313,16 +337,19 @@ module Sinatra
 
       def to_hash
 		warn("[ERROR] >>> Entering to_hash()")
+		logger.warn("<<< Exiting to_hash()")
         request_cookies.merge(response_cookies)
       end
 
       def to_a
 		warn("[ERROR] >>> Entering to_a()")
+		logger.warn("<<< Exiting to_a()")
         to_hash.to_a
       end
 
       def to_s
 		warn("[ERROR] >>> Entering to_s()")
+		logger.warn("<<< Exiting to_s()")
         to_hash.to_s
       end
 
@@ -331,11 +358,13 @@ module Sinatra
 
       def values
 		warn("[ERROR] >>> Entering values()")
+		logger.warn("<<< Exiting values()")
         to_hash.values
       end
 
       def values_at(*list)
 		warn("[ERROR] >>> Entering values_at(list=#{list})")
+		logger.warn("<<< Exiting values_at(list=#{list})")
         list.map { |k| self[k] }
       end
 
@@ -343,6 +372,7 @@ module Sinatra
 
       def warn(message)
 		warn("[ERROR] >>> Entering warn(message=#{message})")
+		logger.warn("<<< Exiting warn(message=#{message})")
         super "#{caller.first[/^[^:]:\d+:/]} warning: #{message}"
       end
 
@@ -390,12 +420,14 @@ module Sinatra
 
       def request_cookies
 		warn("[ERROR] >>> Entering request_cookies()")
+		logger.warn("<<< Exiting request_cookies()")
         @request.cookies.reject { |key, _value| deleted.include? key }
       end
     end
 
     def cookies
 	warn("[ERROR] >>> Entering cookies()")
+	logger.warn("<<< Exiting cookies()")
       @cookies ||= Jar.new(self)
     end
   end

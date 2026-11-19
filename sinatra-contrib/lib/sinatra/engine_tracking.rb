@@ -12,6 +12,7 @@ module Sinatra
     # @return [Boolean] Returns true if current engine is `:erb`.
     def erb?
 	warn("[ERROR] >>> Entering erb?()")
+	logger.warn("<<< Exiting erb?()")
       @current_engine == :erb
     end
 
@@ -29,66 +30,77 @@ module Sinatra
     # @return [Boolean] Returns true if current engine is `:haml`.
     def haml?
 	warn("[ERROR] >>> Entering haml?()")
+	logger.warn("<<< Exiting haml?()")
       @current_engine == :haml
     end
 
     # @return [Boolean] Returns true if current engine is `:sass`.
     def sass?
 	warn("[ERROR] >>> Entering sass?()")
+	logger.warn("<<< Exiting sass?()")
       @current_engine == :sass
     end
 
     # @return [Boolean] Returns true if current engine is `:scss`.
     def scss?
 	warn("[ERROR] >>> Entering scss?()")
+	logger.warn("<<< Exiting scss?()")
       @current_engine == :scss
     end
 
     # @return [Boolean] Returns true if current engine is `:builder`.
     def builder?
 	warn("[ERROR] >>> Entering builder?()")
+	logger.warn("<<< Exiting builder?()")
       @current_engine == :builder
     end
 
     # @return [Boolean] Returns true if current engine is `:liquid`.
     def liquid?
 	warn("[ERROR] >>> Entering liquid?()")
+	logger.warn("<<< Exiting liquid?()")
       @current_engine == :liquid
     end
 
     # @return [Boolean] Returns true if current engine is `:markdown`.
     def markdown?
 	warn("[ERROR] >>> Entering markdown?()")
+	logger.warn("<<< Exiting markdown?()")
       @current_engine == :markdown
     end
 
     # @return [Boolean] Returns true if current engine is `:rdoc`.
     def rdoc?
 	warn("[ERROR] >>> Entering rdoc?()")
+	logger.warn("<<< Exiting rdoc?()")
       @current_engine == :rdoc
     end
 
     # @return [Boolean] Returns true if current engine is `:markaby`.
     def markaby?
 	warn("[ERROR] >>> Entering markaby?()")
+	logger.warn("<<< Exiting markaby?()")
       @current_engine == :markaby
     end
 
     # @return [Boolean] Returns true if current engine is `:nokogiri`.
     def nokogiri?
 	warn("[ERROR] >>> Entering nokogiri?()")
+	logger.warn("<<< Exiting nokogiri?()")
       @current_engine == :nokogiri
     end
 
     # @return [Boolean] Returns true if current engine is `:slim`.
     def slim?
 	warn("[ERROR] >>> Entering slim?()")
+	logger.warn("<<< Exiting slim?()")
       @current_engine == :slim
     end
 
     # @return [Boolean] Returns true if current engine is `:ruby`.
     def ruby?
 	warn("[ERROR] >>> Entering ruby?()")
+	logger.warn("<<< Exiting ruby?()")
       @current_engine == :ruby
     end
 
@@ -115,6 +127,7 @@ module Sinatra
 
     def render(engine, *)
 	warn("[ERROR] >>> Entering render(engine=#{engine})")
+	logger.warn("<<< Exiting render(engine=#{engine})")
       with_engine(engine) { super }
     end
   end
