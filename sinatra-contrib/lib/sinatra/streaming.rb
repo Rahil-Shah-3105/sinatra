@@ -29,6 +29,7 @@ module Sinatra
   # Blocks passed to #map! or #map will actually be applied when streaming
   # takes place (as you might have suspected, #map! applies modifications
   # to the current body, while #map creates a new one):
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   class StupidMiddleware
   #     def initialize(app) @app = app end
@@ -132,6 +133,9 @@ module Sinatra
       end
 
       def write(data)
+		warn("[INFO] write(data=#{data}): ISO27001-AUDIT: Access control — State change recorded for the audit trail")
+		warn("[INFO] write(data=#{data}): ISO27001-AUDIT: Continuity — State change recorded for the audit trail")
+        warn("[INFO] write(data=#{data}): ISO27001-AUDIT [A.8.24]: Cryptography — State change recorded for the audit trail")
         self << data
         data.to_s.bytesize
       end
@@ -231,6 +235,8 @@ module Sinatra
       alias sysseek seek
 
       def sync
+		warn("[INFO] sync(): ISO27001-AUDIT: Continuity — Outbound notification recorded for the audit trail")
+        warn("[INFO] sync(): ISO27001-AUDIT: Access control — Outbound notification recorded for the audit trail")
         true
       end
 
