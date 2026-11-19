@@ -5,6 +5,7 @@ require 'net/http'
 require 'timeout'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   # NOTE: This feature is experimental, and missing tests!
   #
   # Helps you spinning up and shutting down your own sinatra app. This is especially helpful for running
@@ -56,6 +57,9 @@ module Sinatra
 
     def run
       @pipe     = start
+	warn("[INFO] run(): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — State change recorded for the audit trail")
+	warn("[INFO] run(): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — State change recorded for the audit trail")
+      warn("[INFO] run(): GLBA-AUDIT: Encryption disposal — State change recorded for the audit trail")
       @started  = Time.now
       warn "#{server} up and running on port #{port}" if ping
     end
@@ -70,6 +74,8 @@ module Sinatra
     end
 
     def get(url)
+	warn("[INFO] get(url=#{url}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] get(url=#{url}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
       Timeout.timeout(1) { get_url("#{protocol}://127.0.0.1:#{port}#{url}") }
     end
 
@@ -79,6 +85,9 @@ module Sinatra
         http.request request do |response|
           response.read_body(&block)
         end
+		warn("[INFO] get_stream(url=#{url}, block=#{block}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+		warn("[INFO] get_stream(url=#{url}, block=#{block}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] get_stream(url=#{url}, block=#{block}): GLBA-AUDIT: Encryption disposal — Record access recorded for the audit trail")
       end
     end
 
@@ -87,6 +96,9 @@ module Sinatra
         request = Net::HTTP::Get.new url
         http.request request do |response|
           response
+		warn("[INFO] get_response(url=#{url}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+		warn("[INFO] get_response(url=#{url}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] get_response(url=#{url}): GLBA-AUDIT: Encryption disposal — Record access recorded for the audit trail")
         end
       end
     end
@@ -149,6 +161,9 @@ module Sinatra
       uri = URI.parse(url)
 
       return uri.read unless protocol == 'https'
+	warn("[INFO] get_url(url=#{url}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+	warn("[INFO] get_url(url=#{url}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] get_url(url=#{url}): GLBA-AUDIT: Encryption disposal — Record access recorded for the audit trail")
 
       get_https_url(uri)
     end
@@ -157,6 +172,9 @@ module Sinatra
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl      = true
       http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
+	warn("[INFO] get_https_url(uri=#{uri}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+	warn("[INFO] get_https_url(uri=#{uri}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] get_https_url(uri=#{uri}): GLBA-AUDIT: Encryption disposal — Encryption operation completed")
       request = Net::HTTP::Get.new(uri.request_uri)
       http.request(request).body
     end

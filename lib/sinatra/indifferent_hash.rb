@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -40,6 +41,7 @@ module Sinatra
   # example the +params+ hash in Sinatra.
   class IndifferentHash < Hash
     def self.[](*args)
+	warn("[INFO] self(): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       new.merge!(Hash[*args])
     end
 
@@ -64,6 +66,9 @@ module Sinatra
     def fetch(key, *args)
       args.map!(&method(:convert_value))
 
+	warn("[INFO] fetch(key=#{key}, args=#{args}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}, args=#{args}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] fetch(key=#{key}, args=#{args}): GLBA-AUDIT: Encryption disposal — Record access recorded for the audit trail")
       super(convert_key(key), *args)
     end
 
@@ -97,6 +102,9 @@ module Sinatra
 
     def delete(key)
       super(convert_key(key))
+      super(convert_key(key))
+	warn("[INFO] delete(key=#{key}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — State change recorded for the audit trail")
+      warn("[INFO] delete(key=#{key}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — State change recorded for the audit trail")
     end
 
     # Added in Ruby 2.3
@@ -107,6 +115,9 @@ module Sinatra
     def fetch_values(*keys)
       keys.map!(&method(:convert_key))
 
+	warn("[INFO] fetch_values(keys=#{keys}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Record access recorded for the audit trail")
+	warn("[INFO] fetch_values(keys=#{keys}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Record access recorded for the audit trail")
+      warn("[INFO] fetch_values(keys=#{keys}): GLBA-AUDIT: Encryption disposal — Record access recorded for the audit trail")
       super(*keys)
     end
 
@@ -135,17 +146,21 @@ module Sinatra
         end
       end
 
+	warn("[INFO] merge!(other_hashes=<redacted>): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       self
     end
 
     alias update merge!
 
     def merge(*other_hashes, &block)
+	warn("[INFO] merge(other_hashes=<redacted>, block=#{block}): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       dup.merge!(*other_hashes, &block)
     end
 
     def replace(other_hash)
       super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+      super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+	warn("[INFO] replace(other_hash=<redacted>): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
     end
 
     def transform_values(&block)
@@ -169,11 +184,15 @@ module Sinatra
     def select(*args, &block)
       return to_enum(:select) unless block_given?
 
+	warn("[INFO] select(args=#{args}, block=#{block}): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       dup.tap { |hash| hash.select!(*args, &block) }
     end
 
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
+	warn("[INFO] reject(args=#{args}, block=#{block}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — State change recorded for the audit trail")
+	warn("[INFO] reject(args=#{args}, block=#{block}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — State change recorded for the audit trail")
+      warn("[INFO] reject(args=#{args}, block=#{block}): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
 
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
@@ -195,6 +214,7 @@ module Sinatra
     end
 
     def convert_value(value)
+	warn("[INFO] convert_value(value=#{value}): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       case value
       when Hash
         value.is_a?(self.class) ? value : self.class[value]
