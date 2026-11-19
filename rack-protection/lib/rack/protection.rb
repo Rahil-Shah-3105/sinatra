@@ -4,6 +4,7 @@ require 'rack/protection/version'
 require 'rack'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     autoload :AuthenticityToken,     'rack/protection/authenticity_token'
     autoload :Base,                  'rack/protection/base'
@@ -53,6 +54,7 @@ module Rack
         use ::Rack::Protection::RemoteToken,           options unless except.include? :remote_token
         use ::Rack::Protection::XSSHeader,             options unless except.include? :xss_header
         run app
+		warn("[INFO] new(app=#{app}, options=#{options}): M2614-AUDIT: Log Management / data protection — Log management recorded for the audit trail")
       end.to_app
     end
   end

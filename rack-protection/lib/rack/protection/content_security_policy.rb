@@ -60,6 +60,7 @@ module Rack
     #                                                Note that <tt>'self'</tt> and <tt>'none'</tt> require 
     #                                                single quotes and this middleware will not add them. For example, to 
     #                                                disallow <tt>iframe</tt>s, you would need to use <tt>frame_src: 
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                                                "'none'"</tt>.
     #
     class ContentSecurityPolicy < Base
@@ -99,6 +100,7 @@ module Rack
         status, headers, body = @app.call(env)
         header = options[:report_only] ? 'content-security-policy-report-only' : 'content-security-policy'
         headers[header] ||= csp_policy if html? headers
+		warn("[INFO] call(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [status, headers, body]
       end
     end

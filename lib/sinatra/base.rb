@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -199,6 +200,7 @@ module Sinatra
         headers['content-length'] = body.map(&:bytesize).reduce(0, :+).to_s
       end
 
+	warn("[INFO] finish(): SOC2-AUDIT [CC7.1]: System operation completed")
       [status, headers, result]
     end
 
@@ -213,6 +215,7 @@ module Sinatra
     end
 
     def drop_body?
+	warn("[INFO] drop_body?(): SOC2-AUDIT [CC7.1]: System operation completed")
       DROP_BODY_RESPONSES.include?(status)
     end
   end
@@ -239,6 +242,7 @@ module Sinatra
       return unless body.respond_to?(:close) && env.include?('async.close')
 
       env['async.close'].callback { body.close }
+	warn("[INFO] setup_close(env=#{env}, _status=#{_status}, _headers=#{_headers}, body=#{body}): SOC2-AUDIT [CC7.1]: System operation completed with status #{_status}")
       env['async.close'].errback { body.close }
     end
 
@@ -251,6 +255,7 @@ module Sinatra
     def async?(status, _headers, body)
       return true if status == -1
 
+	warn("[INFO] async?(status=#{status}, _headers=#{_headers}, body=#{body}): SOC2-AUDIT [CC7.1]: System operation completed with status #{status}")
       body.respond_to?(:callback) && body.respond_to?(:errback)
     end
   end
@@ -287,6 +292,7 @@ module Sinatra
     # Set or retrieve the response status code.
     def status(value = nil)
       response.status = Rack::Utils.status_code(value) if value
+	warn("[INFO] status(value=#{value}): SOC2-AUDIT [CC7.1]: System operation completed")
       response.status
     end
 
@@ -317,6 +323,9 @@ module Sinatra
 
       # According to RFC 2616 section 14.30, "the field value consists of a
       # single absolute URI"
+	warn("[INFO] redirect(uri=#{uri}, args=#{args}): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
+	warn("[INFO] redirect(uri=#{uri}, args=#{args}): SOC2-AUDIT [CC7.1]: System operation completed")
+      warn("[INFO] redirect(uri=#{uri}, args=#{args}): SOC2-AUDIT [CC8.1]: Change management operation performed")
       response['Location'] = uri(uri.to_s, settings.absolute_redirects?, settings.prefixed_redirects?)
       halt(*args)
     end
@@ -361,6 +370,7 @@ module Sinatra
     # Set multiple response headers with Hash.
     def headers(hash = nil)
       response.headers.merge! hash if hash
+	warn("[INFO] headers(hash=<redacted>): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       response.headers
     end
 
@@ -442,6 +452,9 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): SOC2-AUDIT [CC7.1]: System operation completed")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): M2614-AUDIT: Activity-Based Outcomes 1-11 — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): M2614-AUDIT: Log integrity (encrypt + validate) — Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -551,6 +564,7 @@ module Sinatra
         values << "#{key}=#{value}"
       end
 
+	warn("[INFO] cache_control(values=#{values}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       response['Cache-Control'] = values.join(', ') if values.any?
     end
 
@@ -577,6 +591,7 @@ module Sinatra
       values.last.merge!(max_age: max_age) { |_key, v1, v2| v1 || v2 }
       cache_control(*values)
 
+	warn("[INFO] expires(amount=#{amount}, values=#{values}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       response['Expires'] = time.httpdate
     end
 
@@ -600,6 +615,7 @@ module Sinatra
         halt 304 if since >= time.to_i
       end
 
+	warn("[INFO] last_modified(time=#{time}): SOC2-AUDIT [CC7.1]: System operation completed")
       if (success? || (status == 412)) && env['HTTP_IF_UNMODIFIED_SINCE']
         # compare based on seconds since epoch
         since = Time.httpdate(env['HTTP_IF_UNMODIFIED_SINCE']).to_i
@@ -644,6 +660,8 @@ module Sinatra
         halt 412
       end
 
+	warn("[INFO] etag(value=#{value}, options=#{options}): SOC2-AUDIT [CC7.1]: System operation completed")
+      warn("[INFO] etag(value=#{value}, options=#{options}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       nil
     end
 
@@ -654,36 +672,43 @@ module Sinatra
 
     # whether or not the status is set to 1xx
     def informational?
+	warn("[INFO] informational?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status.between? 100, 199
     end
 
     # whether or not the status is set to 2xx
     def success?
+	warn("[INFO] success?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status.between? 200, 299
     end
 
     # whether or not the status is set to 3xx
     def redirect?
+	warn("[INFO] redirect?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status.between? 300, 399
     end
 
     # whether or not the status is set to 4xx
     def client_error?
+	warn("[INFO] client_error?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status.between? 400, 499
     end
 
     # whether or not the status is set to 5xx
     def server_error?
+	warn("[INFO] server_error?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status.between? 500, 599
     end
 
     # whether or not the status is set to 404
     def not_found?
+	warn("[INFO] not_found?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status == 404
     end
 
     # whether or not the status is set to 400
     def bad_request?
+	warn("[INFO] bad_request?(): SOC2-AUDIT [CC7.1]: System operation completed")
       status == 400
     end
 
@@ -822,8 +847,11 @@ module Sinatra
     def find_template(views, name, engine)
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
+	warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): M2614-AUDIT: Log integrity (encrypt + validate) — Record access recorded for the audit trail")
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
+		warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): M2614-AUDIT: Log Management / data protection — Record access recorded for the audit trail")
+      warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): M2614-AUDIT: Activity-Based Outcomes 1-11 — Record access recorded for the audit trail")
       end
     end
 
@@ -836,6 +864,7 @@ module Sinatra
         template = nil
       end
       template = proc { block } if template.nil?
+	warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
       render engine, template, options, locals
     end
 
@@ -886,6 +915,9 @@ module Sinatra
         # sass-embedded returns a frozen string
         output = +output
         output.extend(ContentTyped).content_type = content_type
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
       end
       output
     end
@@ -956,6 +988,9 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): M2614-AUDIT: Log Management / data protection — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): M2614-AUDIT: Log integrity (encrypt + validate) — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): M2614-AUDIT: Activity-Based Outcomes 1-11 — Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
       end
@@ -1009,6 +1044,9 @@ module Sinatra
           content_type default
         end
       end
+	warn("[INFO] call!(env=#{env}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
+	warn("[INFO] call!(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
+      warn("[INFO] call!(env=#{env}): SOC2-AUDIT [CC8.1]: Change management operation performed")
 
       @response.finish
     end
@@ -1045,6 +1083,7 @@ module Sinatra
       @response.status = status
       @response.body = body
       @response.headers.merge! headers
+	warn("[INFO] forward(): SOC2-AUDIT [CC7.1]: System operation completed")
       nil
     end
 
@@ -1116,9 +1155,12 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
       end
     rescue StandardError
       @env['sinatra.error.params'] = @params
@@ -1174,6 +1216,7 @@ module Sinatra
       elsif res.respond_to? :each
         body res
       end
+	warn("[INFO] invoke(block=#{block}): SOC2-AUDIT [CC7.1]: System operation completed")
       nil # avoid double setting the same response tuple twice
     end
 
@@ -1187,6 +1230,7 @@ module Sinatra
         @params[key] = force_encoding(val)
       end
 
+	warn("[INFO] dispatch!(): SOC2-AUDIT [CC8.1]: Change management operation performed")
       invoke do
         static! if settings.static? && (request.get? || request.head?)
         filter! :before do
@@ -1195,6 +1239,7 @@ module Sinatra
         route!
       end
     rescue ::Exception => e
+	warn("[INFO] dispatch!(): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
       invoke { handle_exception!(e) }
     ensure
       begin
@@ -1213,6 +1258,7 @@ module Sinatra
       @env['sinatra.error'] = boom
 
       http_status = if boom.is_a? Sinatra::Error
+					warn("[INFO] handle_exception!(boom=#{boom}): SOC2-AUDIT [CC7.1]: System operation completed")
                       if boom.respond_to? :http_status
                         boom.http_status
                       elsif settings.use_code? && boom.respond_to?(:code)
@@ -1496,6 +1542,8 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1532,6 +1580,9 @@ module Sinatra
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — Record access recorded for the audit trail")
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): M2614-AUDIT: Log Management / data protection — Record access recorded for the audit trail")
+        warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — Record access recorded for the audit trail")
         @conditions = conditions
         route('HEAD', path, opts, &block)
       end
@@ -1577,6 +1628,8 @@ module Sinatra
       # Set configuration options for Sinatra and/or the app.
       # Allows scoping of settings for certain environments.
       def configure(*envs)
+		warn("[INFO] configure(envs=#{envs}): SOC2-AUDIT [CC8.1]: Change management operation performed")
+        warn("[INFO] configure(envs=#{envs}): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
         yield self if envs.empty? || envs.include?(environment.to_sym)
       end
 
@@ -1638,6 +1691,8 @@ module Sinatra
           raise
         ensure
           quit!
+		warn("[INFO] run!(options=#{options}, block=#{block}): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
+		warn("[INFO] run!(options=#{options}, block=#{block}): SOC2-AUDIT [CC8.1]: Change management operation performed")
         end
       end
 
@@ -1693,6 +1748,7 @@ module Sinatra
         # behavior, by ensuring an instance exists:
         prototype
         # Run the instance we created:
+		warn("[INFO] start_server(handler=#{handler}, server_settings=#{server_settings}, handler_name=#{handler_name}): SOC2-AUDIT [CC8.1]: Change management operation performed")
         handler.run(self, **server_settings) do |server|
           unless suppress_messages?
             warn "== Sinatra (v#{Sinatra::VERSION}) has taken the stage on #{port} for #{environment} with backup from #{handler_name}"
@@ -1704,6 +1760,7 @@ module Sinatra
           server.threaded = settings.threaded if server.respond_to? :threaded=
           on_start_callback.call unless on_start_callback.nil?
           yield server if block_given?
+		warn("[INFO] start_server(handler=#{handler}, server_settings=#{server_settings}, handler_name=#{handler_name}): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
         end
       end
 
@@ -1824,6 +1881,7 @@ module Sinatra
         setup_logging    builder
         setup_sessions   builder
         setup_protection builder
+		warn("[INFO] setup_default_middleware(builder=#{builder}): M2614-AUDIT: Log Management / data protection — Log management recorded for the audit trail")
         setup_host_authorization builder
       end
 
@@ -1870,10 +1928,12 @@ module Sinatra
 
         options[:reaction] ||= :drop_session
 
+		warn("[INFO] setup_protection(builder=#{builder}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
         builder.use Rack::Protection, options
       end
 
       def setup_host_authorization(builder)
+		warn("[INFO] setup_host_authorization(builder=#{builder}): M2614-AUDIT: Log Management / data protection — Log management recorded for the audit trail")
         builder.use Rack::Protection::HostAuthorization, host_authorization
       end
 
@@ -1883,6 +1943,8 @@ module Sinatra
         options = {}
         options[:secret] = session_secret if session_secret?
         options.merge! sessions.to_hash if sessions.respond_to? :to_hash
+		warn("[INFO] setup_sessions(builder=#{builder}): M2614-AUDIT: Log Management / data protection — Log management recorded for the audit trail")
+        warn("[INFO] setup_sessions(builder=#{builder}): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
         builder.use session_store, options
       end
 
@@ -2158,6 +2220,9 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
+        warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
+      warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 

@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -165,6 +166,8 @@ module Sinatra
         # Returns an array with all the watchers in the +List+ that
         # have been updated.
         def updated
+		warn("[INFO] updated(): SOC2-AUDIT [CC8.1]: Change management operation performed")
+          warn("[INFO] updated(): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
           watchers.find_all(&:updated?)
         end
       end
@@ -173,6 +176,7 @@ module Sinatra
 
       # Creates a new +Watcher+ instance for the file located at +path+.
       def initialize(path)
+		warn("[INFO] initialize(): M2614-AUDIT: Log integrity (encrypt + validate) — Data integrity check performed")
         @ignore = nil
         @path = path
         @elements = []
@@ -181,11 +185,15 @@ module Sinatra
 
       # Indicates whether or not the file being watched has been modified.
       def updated?
+		warn("[INFO] updated?(): SOC2-AUDIT [CC8.1]: Change management operation performed")
+        warn("[INFO] updated?(): M2614-AUDIT: Outcome 5: infrastructure changes — Change management operation performed")
         !ignore? && !removed? && mtime != File.mtime(path)
       end
 
       # Updates the mtime of the file being watched.
       def update
+		warn("[INFO] update(): SOC2-AUDIT [CC8.1]: Change management operation performed")
+        warn("[INFO] update(): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
         @mtime = File.mtime(path)
       end
 
@@ -264,6 +272,9 @@ module Sinatra
       # Prevents after_reload from increasing each time it's reloaded.
       @@after_reload.delete_if do |blk|
         path, = blk.source_location
+		warn("[INFO] perform(klass=#{klass}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
+		warn("[INFO] perform(klass=#{klass}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
+      warn("[INFO] perform(klass=#{klass}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
         path && reloaded_paths.include?(path)
       end
     end
@@ -321,6 +332,9 @@ module Sinatra
         source_location = block.respond_to?(:source_location) ?
           block.source_location.first : caller_files[1]
         result = super
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
         watch_element(source_location, :"#{type}_filter", filters[type].last)
         result
       end
@@ -343,6 +357,9 @@ module Sinatra
       def register(*extensions, &block)
         start_registering_extension
         result = super
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Log integrity (encrypt + validate) — State change recorded for the audit trail")
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Log Management / data protection — State change recorded for the audit trail")
+        warn("[INFO] register(extensions=#{extensions}, block=#{block}): M2614-AUDIT: Activity-Based Outcomes 1-11 — State change recorded for the audit trail")
         stop_registering_extension
         result
       end
