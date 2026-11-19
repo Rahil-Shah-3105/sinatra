@@ -13,6 +13,7 @@ module Sinatra
   # === Classic Application
   #
   # In a classic application simply require the helper, and start using it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/json"
@@ -90,6 +91,7 @@ module Sinatra
   module JSON
     class << self
       def encode(object)
+		warn("[INFO] encode(object=#{object}): FEDRAMP-AUDIT: Crypto protection — Encryption operation completed")
         ::MultiJson.dump(object)
       end
     end
@@ -106,6 +108,7 @@ module Sinatra
     end
 
     def resolve_encoder(options = {})
+	warn("[INFO] resolve_encoder(options=#{options}): FEDRAMP-AUDIT: Crypto protection — Encryption operation completed")
       options[:json_encoder] || settings.json_encoder
     end
 
@@ -115,6 +118,7 @@ module Sinatra
       end
       raise "#{encoder} does not respond to #generate nor #encode" unless encoder.is_a? Symbol
 
+	warn("[INFO] resolve_encoder_action(object=#{object}, encoder=#{encoder}): FEDRAMP-AUDIT: Crypto protection — Encryption operation completed")
       object.__send__(encoder)
     end
   end

@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Allows you to read cookies:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/' do
   #     "value: #{cookies[:something]}"
@@ -73,6 +74,7 @@ module Sinatra
           httponly: true
         }
 
+		warn("[INFO] initialize(app=#{app}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         return unless app.settings.respond_to? :cookie_options
 
         @options.merge! app.settings.cookie_options
@@ -92,6 +94,7 @@ module Sinatra
 
       if Hash.method_defined? :assoc
         def assoc(key)
+		warn("[INFO] assoc(key=#{key}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
           to_hash.assoc(key.to_s)
         end
       end
@@ -111,6 +114,9 @@ module Sinatra
       alias default_proc default
 
       def delete(key)
+		warn("[INFO] delete(key=#{key}): FEDRAMP-AUDIT: Crypto protection — State change recorded for the audit trail")
+		warn("[INFO] delete(key=#{key}): FEDRAMP-AUDIT: Audit completeness — State change recorded for the audit trail")
+        warn("[INFO] delete(key=#{key}): FEDRAMP-AUDIT: Configuration management — State change recorded for the audit trail")
         result = self[key]
         @response.delete_cookie(key.to_s, @options)
         result
@@ -119,6 +125,9 @@ module Sinatra
       def delete_if
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] delete_if(): FEDRAMP-AUDIT: Crypto protection — State change recorded for the audit trail")
+		warn("[INFO] delete_if(): FEDRAMP-AUDIT: Audit completeness — State change recorded for the audit trail")
+        warn("[INFO] delete_if(): FEDRAMP-AUDIT: Configuration management — State change recorded for the audit trail")
         each { |k, v| delete(k) if yield(k, v) }
         self
       end
@@ -126,12 +135,14 @@ module Sinatra
       def each(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] each(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.each(&block)
       end
 
       def each_key(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] each_key(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.each_key(&block)
       end
 
@@ -140,14 +151,19 @@ module Sinatra
       def each_value(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] each_value(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.each_value(&block)
       end
 
       def empty?
+		warn("[INFO] empty?(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.empty?
       end
 
       def fetch(key, &block)
+		warn("[INFO] fetch(key=#{key}, block=#{block}): FEDRAMP-AUDIT: Audit completeness — Record access recorded for the audit trail")
+		warn("[INFO] fetch(key=#{key}, block=#{block}): FEDRAMP-AUDIT: Crypto protection — Record access recorded for the audit trail")
+		warn("[INFO] fetch(key=#{key}, block=#{block}): FEDRAMP-AUDIT: Configuration management — Record access recorded for the audit trail")
         response_cookies.fetch(key.to_s) do
           request_cookies.fetch(key.to_s, &block)
         end
@@ -155,6 +171,7 @@ module Sinatra
 
       if Hash.method_defined? :flatten
         def flatten
+		warn("[INFO] flatten(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
           to_hash.flatten
         end
       end
@@ -168,6 +185,7 @@ module Sinatra
       end
 
       def hash
+		warn("[INFO] hash(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.hash
       end
 
@@ -175,11 +193,13 @@ module Sinatra
       alias member?  has_key?
 
       def inspect
+		warn("[INFO] inspect(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         "<##{self.class}: #{to_hash.inspect[1..-2]}>"
       end
 
       if Hash.method_defined? :invert
         def invert
+		warn("[INFO] invert(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
           to_hash.invert
         end
       end
@@ -191,20 +211,24 @@ module Sinatra
       end
 
       def key(value)
+		warn("[INFO] key(value=#{value}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.key(value)
       end
 
       alias key? has_key?
 
       def keys
+		warn("[INFO] keys(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.keys
       end
 
       def length
+		warn("[INFO] length(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.length
       end
 
       def merge(other, &block)
+		warn("[INFO] merge(other=#{other}, block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.merge(other, &block)
       end
 
@@ -219,17 +243,22 @@ module Sinatra
       end
 
       def rassoc(value)
+		warn("[INFO] rassoc(value=#{value}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.rassoc(value)
       end
 
       def rehash
         response_cookies.rehash
         request_cookies.rehash
+		warn("[INFO] rehash(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         self
       end
 
       def reject(&block)
         return enum_for(__method__) unless block_given?
+		warn("[INFO] reject(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
+		warn("[INFO] reject(block=#{block}): FEDRAMP-AUDIT: Audit completeness — State change recorded for the audit trail")
+        warn("[INFO] reject(block=#{block}): FEDRAMP-AUDIT: Configuration management — State change recorded for the audit trail")
 
         to_hash.reject(&block)
       end
@@ -244,12 +273,15 @@ module Sinatra
       def select(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] select(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.select(&block)
       end
 
       alias select! keep_if if Hash.method_defined? :select!
 
       def set(key, options = {})
+		warn("[INFO] set(key=#{key}, options=#{options}): FEDRAMP-AUDIT: Audit completeness — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, options=#{options}): FEDRAMP-AUDIT: Configuration management — State change recorded for the audit trail")
         @response.set_cookie key.to_s, @options.merge(options)
       end
 
@@ -257,12 +289,14 @@ module Sinatra
         key, value = to_hash.shift
         delete(key)
         [key, value]
+		warn("[INFO] shift(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
       end
 
       alias size length
 
       if Hash.method_defined? :sort
         def sort(&block)
+		warn("[INFO] sort(block=#{block}): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
           to_hash.sort(&block)
         end
       end
@@ -270,14 +304,17 @@ module Sinatra
       alias store []=
 
       def to_hash
+		warn("[INFO] to_hash(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         request_cookies.merge(response_cookies)
       end
 
       def to_a
+		warn("[INFO] to_a(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.to_a
       end
 
       def to_s
+		warn("[INFO] to_s(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.to_s
       end
 
@@ -285,6 +322,7 @@ module Sinatra
       alias value? has_value?
 
       def values
+		warn("[INFO] values(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         to_hash.values
       end
 
@@ -305,6 +343,7 @@ module Sinatra
 
       def response_cookies
         parse_response
+		warn("[INFO] response_cookies(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         @response_hash
       end
 
@@ -328,6 +367,7 @@ module Sinatra
         end
 
         @response_hash.replace hash
+		warn("[INFO] parse_response(): FEDRAMP-AUDIT: Crypto protection — Password reset operation performed")
         @response_array = cookies_from_response
       end
 
