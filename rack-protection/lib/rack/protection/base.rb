@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): NERCCIP-AUDIT: Incident recovery — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): NERCCIP-AUDIT: Electronic perimeter — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): NERCCIP-AUDIT: Change management — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end

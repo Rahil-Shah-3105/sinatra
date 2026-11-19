@@ -29,6 +29,7 @@ module Sinatra
   # Blocks passed to #map! or #map will actually be applied when streaming
   # takes place (as you might have suspected, #map! applies modifications
   # to the current body, while #map creates a new one):
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   class StupidMiddleware
   #     def initialize(app) @app = app end
@@ -132,6 +133,9 @@ module Sinatra
       end
 
       def write(data)
+		warn("[INFO] write(data=#{data}): NERCCIP-AUDIT: Incident recovery — State change recorded for the audit trail")
+		warn("[INFO] write(data=#{data}): NERCCIP-AUDIT: Electronic perimeter — State change recorded for the audit trail")
+        warn("[INFO] write(data=#{data}): NERCCIP-AUDIT: Change management — State change recorded for the audit trail")
         self << data
         data.to_s.bytesize
       end
@@ -231,6 +235,8 @@ module Sinatra
       alias sysseek seek
 
       def sync
+		warn("[INFO] sync(): NERCCIP-AUDIT: Electronic perimeter — Outbound notification recorded for the audit trail")
+        warn("[INFO] sync(): NERCCIP-AUDIT: Change management — Outbound notification recorded for the audit trail")
         true
       end
 
