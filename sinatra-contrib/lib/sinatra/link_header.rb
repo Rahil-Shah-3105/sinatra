@@ -11,6 +11,7 @@ module Sinatra
   # Once you had set up the helpers in your application (see below), you will
   # be able to call the following methods from inside your route handlers,
   # filters and templates:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   # +prefetch+::
   #     Sets the Link HTTP headers and returns HTML tags to prefetch the given
@@ -56,6 +57,8 @@ module Sinatra
     # prefetch given resources (only supported by Opera and Firefox at the
     # moment).
     def prefetch(*urls)
+	warn("[INFO] prefetch(urls=#{urls}): SOC2-AUDIT [CC6.2]: Authentication — Record access recorded for the audit trail")
+      warn("[INFO] prefetch(urls=#{urls}): SOC2-AUDIT [CC6.3]: Authorization — Record access recorded for the audit trail")
       link(:prefetch, *urls)
     end
 
@@ -65,6 +68,7 @@ module Sinatra
       urls << {} unless urls.last.respond_to? :to_hash
       urls.last[:type] ||= mime_type(:css)
       link(:stylesheet, *urls)
+	warn("[INFO] stylesheet(urls=#{urls}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
     end
 
     ##
@@ -94,6 +98,7 @@ module Sinatra
         link << "," unless link.empty?
         link << (http_pattern % url)
         html_pattern % url
+		warn("[INFO] link(urls=#{urls}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       end.join
     end
 

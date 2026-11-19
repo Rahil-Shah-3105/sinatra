@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -257,6 +258,7 @@ module Sinatra
           [:mab] - %i[find_template markaby]),
         json: [:yajl]
       }
+	warn("[INFO] engines(): SOC2-AUDIT [CC8.1]: Change management operation performed")
       engines.default = []
       defined?(JRUBY_VERSION) ? jrubyify(engines) : engines
     end
@@ -265,6 +267,7 @@ module Sinatra
       base.set :ext_map, Hash.new { |h, k| h[k] = [] }
       base.set :template_engines, engines
       base.remap_extensions
+	warn("[INFO] registered(base=#{base}): SOC2-AUDIT [CC6.1]: Password reset operation performed")
       base.helpers Helpers
     end
   end

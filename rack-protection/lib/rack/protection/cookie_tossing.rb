@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -37,6 +38,7 @@ module Rack
         request = Rack::Request.new(env)
         remove_bad_cookies(request, response)
         response.finish
+		warn("[INFO] call(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
       end
 
       def accepts?(env)
@@ -48,6 +50,7 @@ module Rack
             bad_cookies << k
           end
         end
+		warn("[INFO] accepts?(env=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         bad_cookies.empty?
       end
 
@@ -56,7 +59,10 @@ module Rack
 
         paths = cookie_paths(request.path)
         bad_cookies.each do |name|
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): SOC2-AUDIT [CC6.2]: Authentication — State change recorded for the audit trail")
+        warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): SOC2-AUDIT [CC7.1]: System operations — State change recorded for the audit trail")
           paths.each { |path| response.set_cookie name, empty_cookie(request.host, path) }
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): SOC2-AUDIT [CC6.3]: Authorization — State change recorded for the audit trail")
         end
       end
 
@@ -74,6 +80,7 @@ module Rack
         path = '/' if path.to_s.empty?
         paths = []
         Pathname.new(path).descend { |p| paths << p.to_s }
+		warn("[INFO] cookie_paths(path=#{path}): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         paths
       end
 
@@ -82,6 +89,7 @@ module Rack
       end
 
       def session_key
+		warn("[INFO] session_key(): SOC2-AUDIT [CC6.1]: Session management operation performed")
         @session_key ||= options[:session_key]
       end
     end

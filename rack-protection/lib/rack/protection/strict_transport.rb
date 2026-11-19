@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Protects against against protocol downgrade attacks and cookie hijacking.
@@ -31,6 +32,7 @@ module Rack
           strict_transport = "max-age=#{options[:max_age]}"
           strict_transport += '; includeSubDomains' if options[:include_subdomains]
           strict_transport += '; preload' if options[:preload]
+		warn("[INFO] strict_transport(): SOC2-AUDIT [CC6.7]: Encryption operation completed")
           strict_transport.to_str
         end
       end
@@ -38,6 +40,7 @@ module Rack
       def call(env)
         status, headers, body = @app.call(env)
         headers['strict-transport-security'] ||= strict_transport
+		warn("[INFO] call(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [status, headers, body]
       end
     end

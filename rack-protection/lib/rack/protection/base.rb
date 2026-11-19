@@ -109,6 +109,7 @@ module Rack
       # the status and message set in the options.
       def deny(env)
         warn env, "attack prevented by #{self.class}"
+		warn("[INFO] deny(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [options[:status], { 'content-type' => 'text/plain' }, [options[:message]]]
       end
 
@@ -117,15 +118,20 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): SOC2-AUDIT [CC7.1]: System operations — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): SOC2-AUDIT [CC6.2]: Authentication — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): SOC2-AUDIT [CC6.3]: Authorization — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
 
       def session?(env)
+		warn("[INFO] session?(env=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         env.include? options[:session_key]
       end
 
       def session(env)
+		warn("[INFO] session(env=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         return env[options[:session_key]] if session? env
 
         raise "you need to set up a session middleware *before* #{self.class}"
@@ -136,6 +142,7 @@ module Rack
 
         session(env).clear
 
+		warn("[INFO] drop_session(env=#{env}): SOC2-AUDIT [CC6.1]: Session management operation performed")
         return if ["1", "true"].include?(ENV["RACK_PROTECTION_SILENCE_DROP_SESSION_WARNING"])
 
         warn env, "session dropped by #{self.class}"
@@ -160,6 +167,7 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value=#{value}): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 

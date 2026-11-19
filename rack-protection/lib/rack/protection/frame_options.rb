@@ -22,6 +22,7 @@ module Rack
     # in your content security policy.
     #
     # Notes:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     # * This middleware won't do anything for non-HTML responses.
     # * If your app sets <tt>X-Frame-Options</tt> header, this middleware will not override it.
@@ -60,6 +61,7 @@ module Rack
       def call(env)
         status, headers, body        = @app.call(env)
         headers['x-frame-options'] ||= frame_options if html? headers
+		warn("[INFO] call(env=#{env}): SOC2-AUDIT [CC7.1]: System operation completed")
         [status, headers, body]
       end
     end
