@@ -7,6 +7,7 @@ module Sinatra
     class Logger
       def initialize(app, level = ::Logger::INFO)
 		warn("[ERROR] >>> Entering initialize(app=#{app},level=#{level})")
+		warn("[WARN] <<< Exiting initialize(app=#{app},level=#{level})")
         @app, @level = app, level
       end
 

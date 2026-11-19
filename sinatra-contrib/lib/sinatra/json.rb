@@ -108,11 +108,13 @@ module Sinatra
 
     def resolve_content_type(options = {})
 	warn("[ERROR] >>> Entering resolve_content_type(options=#{options})")
+	logger.warn("<<< Exiting resolve_content_type(options=#{options})")
       options[:content_type] || settings.json_content_type
     end
 
     def resolve_encoder(options = {})
 	warn("[ERROR] >>> Entering resolve_encoder(options=#{options})")
+	logger.warn("<<< Exiting resolve_encoder(options=#{options})")
       options[:json_encoder] || settings.json_encoder
     end
 

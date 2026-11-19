@@ -92,6 +92,7 @@ module Rack
         origin_host = extract_host(request.host_authority)
         forwarded_host = extract_host(request.forwarded_authority)
 
+		warn("[DEBUG] accepts?(env=#{env}): origin_host → #{origin_host}")
 		warn("[DEBUG] accepts?(env=#{env}): request → #{request}")
         debug env, "#{self.class} " \
                    "@all_permitted_hosts=#{@all_permitted_hosts.inspect} " \
@@ -116,6 +117,7 @@ module Rack
 
       def extract_host(authority)
 		warn("[ERROR] >>> Entering extract_host(authority=#{authority})")
+		warn("[WARN] <<< Exiting extract_host(authority=#{authority})")
         authority.to_s.split(PORT_REGEXP).first&.downcase
       end
 
@@ -123,15 +125,18 @@ module Rack
 		warn("[ERROR] >>> Entering host_permitted?(host=#{host})")
         exact_match?(host) || domain_match?(host) || ip_match?(host)
       end
+		warn("[WARN] <<< Exiting host_permitted?(host=#{host})")
 
       def exact_match?(host)
 		warn("[ERROR] >>> Entering exact_match?(host=#{host})")
         @permitted_hosts.include?(host)
       end
+		warn("[WARN] <<< Exiting exact_match?(host=#{host})")
 
       def domain_match?(host)
 		warn("[ERROR] >>> Entering domain_match?(host=#{host})")
         return false if host.nil?
+		warn("[WARN] <<< Exiting domain_match?(host=#{host})")
         return false if host.start_with?(DOT)
 
         @domain_hosts.any? { |domain_host| host.match?(domain_host) }

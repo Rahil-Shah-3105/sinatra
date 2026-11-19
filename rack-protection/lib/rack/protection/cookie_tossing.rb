@@ -40,6 +40,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
         remove_bad_cookies(request, response)
 		warn("[DEBUG] call(env=#{env}): response → #{response}")
 		warn("[WARN] <<< Exiting call(env=#{env})")
+		warn("[DEBUG] call(env=#{env}): request → #{request}")
         response.finish
       end
 
@@ -81,6 +82,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
       def bad_cookies
 		warn("[ERROR] >>> Entering bad_cookies()")
+		warn("[WARN] <<< Exiting bad_cookies()")
         @bad_cookies ||= []
       end
 
@@ -96,11 +98,13 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
       def empty_cookie(host, path)
 		warn("[ERROR] >>> Entering empty_cookie(host=#{host},path=#{path})")
+		warn("[WARN] <<< Exiting empty_cookie(host=#{host},path=#{path})")
         { value: '', domain: host, path: path, expires: Time.at(0) }
       end
 
       def session_key
 		warn("[ERROR] >>> Entering session_key()")
+		warn("[WARN] <<< Exiting session_key()")
         @session_key ||= options[:session_key]
       end
     end

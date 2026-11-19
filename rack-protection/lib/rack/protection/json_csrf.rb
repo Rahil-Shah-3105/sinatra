@@ -35,8 +35,8 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
           react_and_close(env, body) or [status, headers, body]
         else
-          [status, headers, body]
 		warn("[WARN] <<< Exiting call(env=#{env})")
+          [status, headers, body]
         end
       end
 
@@ -63,6 +63,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
 
       def close_body(body)
 		warn("[ERROR] >>> Entering close_body(body=#{body})")
+		warn("[WARN] <<< Exiting close_body(body=#{body})")
         body.close if body.respond_to?(:close)
       end
     end

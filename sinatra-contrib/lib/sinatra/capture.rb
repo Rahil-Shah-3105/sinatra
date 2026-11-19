@@ -87,6 +87,7 @@ module Sinatra
 
     def capture(*args, &block)
 	warn("[ERROR] >>> Entering capture(args=#{args},block=#{block})")
+	logger.warn("<<< Exiting capture(args=#{args},block=#{block})")
       return block[*args] if ruby?
 
       if haml? && Tilt[:haml] == Tilt::HamlTemplate && defined?(Haml::Buffer)

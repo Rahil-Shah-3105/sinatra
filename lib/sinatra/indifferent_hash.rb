@@ -44,6 +44,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering self()")
       new.merge!(Hash[*args])
     end
+	warn("[WARN] <<< Exiting self()")
 
     def default(*args)
 	warn("[ERROR] >>> Entering default(args=#{args})")
@@ -112,6 +113,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
     def value?(value)
       super(convert_value(value))
       super(convert_value(value))
+      super(convert_value(value))
     end
 	warn("[ERROR] >>> Entering value?(value=#{value})")
 
@@ -165,8 +167,9 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
           other_hash.each_pair do |key, value|
             key = convert_key(key)
             value = yield(key, self[key], value) if block_given? && key?(key)
-            self[key] = convert_value(value)
 			warn("[WARN] merge!(other_hashes=<redacted>): key → #{key}")
+            self[key] = convert_value(value)
+			warn("[DEBUG] merge!(other_hashes=<redacted>): value → #{value}")
           end
         end
       end
@@ -181,6 +184,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering merge(other_hashes=<redacted>,block=#{block})")
       dup.merge!(*other_hashes, &block)
     end
+	warn("[WARN] <<< Exiting merge(other_hashes=<redacted>,block=#{block})")
 
     def replace(other_hash)
       super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
@@ -192,6 +196,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering transform_values(block=#{block})")
       dup.transform_values!(&block)
     end
+	warn("[WARN] <<< Exiting transform_values(block=#{block})")
 
     def transform_values!
 	warn("[ERROR] >>> Entering transform_values!()")
@@ -205,6 +210,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering transform_keys(block=#{block})")
       dup.transform_keys!(&block)
     end
+	warn("[WARN] <<< Exiting transform_keys(block=#{block})")
 
     def transform_keys!
 	warn("[ERROR] >>> Entering transform_keys!()")
@@ -216,6 +222,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def select(*args, &block)
 	warn("[ERROR] >>> Entering select(args=#{args},block=#{block})")
+	warn("[WARN] <<< Exiting select(args=#{args},block=#{block})")
       return to_enum(:select) unless block_given?
 
       dup.tap { |hash| hash.select!(*args, &block) }
@@ -223,6 +230,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def reject(*args, &block)
 	warn("[ERROR] >>> Entering reject(args=#{args},block=#{block})")
+	warn("[WARN] <<< Exiting reject(args=#{args},block=#{block})")
       return to_enum(:reject) unless block_given?
 
       dup.tap { |hash| hash.reject!(*args, &block) }
@@ -232,6 +240,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 	warn("[ERROR] >>> Entering compact()")
       dup.tap(&:compact!)
     end
+	warn("[WARN] <<< Exiting compact()")
 
     def except(*keys)
 	warn("[ERROR] >>> Entering except(keys=#{keys})")
@@ -245,6 +254,7 @@ logger = ::Logger.new(env[Rack::RACK_ERRORS])
 
     def convert_key(key)
 	warn("[ERROR] >>> Entering convert_key(key=#{key})")
+	warn("[WARN] <<< Exiting convert_key(key=#{key})")
       key.is_a?(Symbol) ? key.to_s : key
     end
 

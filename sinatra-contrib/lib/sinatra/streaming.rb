@@ -168,11 +168,13 @@ module Sinatra
 
       def printf(format, *args)
 		warn("[ERROR] >>> Entering printf(format=#{format},args=#{args})")
+		logger.warn("<<< Exiting printf(format=#{format},args=#{args})")
         print(format.to_s % args)
       end
 
       def putc(c)
 		warn("[ERROR] >>> Entering putc(c=#{c})")
+		logger.warn("<<< Exiting putc(c=#{c})")
         print c.chr
       end
 
@@ -185,16 +187,19 @@ module Sinatra
 
       def close_read
 		warn("[ERROR] >>> Entering close_read()")
+		logger.warn("<<< Exiting close_read()")
         raise IOError, 'closing non-duplex IO for reading'
       end
 
       def closed_read?
 		warn("[ERROR] >>> Entering closed_read?()")
+		logger.warn("<<< Exiting closed_read?()")
         true
       end
 
       def closed_write?
 		warn("[ERROR] >>> Entering closed_write?()")
+		logger.warn("<<< Exiting closed_write?()")
         closed?
       end
 
@@ -202,6 +207,7 @@ module Sinatra
 		warn("[ERROR] >>> Entering external_encoding()")
         warn("[ERROR] Exception in external_encoding(): #{e.message}")
 		warn("[WARN] <<< Exiting external_encoding()")
+		logger.error("Exception in external_encoding(): #{e.message}")
         Encoding.find settings.default_encoding
       rescue NameError
         settings.default_encoding
@@ -209,16 +215,19 @@ module Sinatra
 
       def settings
 		warn("[ERROR] >>> Entering settings()")
+		logger.warn("<<< Exiting settings()")
         app.settings
       end
 
       def rewind
 		warn("[ERROR] >>> Entering rewind()")
+		logger.warn("<<< Exiting rewind()")
         @pos = @lineno = 0
       end
 
       def not_open_for_reading(*)
 		warn("[ERROR] >>> Entering not_open_for_reading()")
+		logger.warn("<<< Exiting not_open_for_reading()")
         raise IOError, 'not opened for reading'
       end
 
@@ -263,6 +272,7 @@ module Sinatra
 
       def seek(*)
 		warn("[ERROR] >>> Entering seek()")
+		logger.warn("<<< Exiting seek()")
         0
       end
 
@@ -270,11 +280,13 @@ module Sinatra
 
       def sync
 		warn("[ERROR] >>> Entering sync()")
+		logger.warn("<<< Exiting sync()")
         true
       end
 
       def tty?
 		warn("[ERROR] >>> Entering tty?()")
+		logger.warn("<<< Exiting tty?()")
         false
       end
 

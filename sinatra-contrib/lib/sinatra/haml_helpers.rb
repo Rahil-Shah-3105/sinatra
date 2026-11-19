@@ -32,22 +32,26 @@ module Sinatra
 
     def surround(front, back = front, &block)
 	warn("[ERROR] >>> Entering surround(front=#{front},back=#{back},block=#{block})")
+	logger.warn("<<< Exiting surround(front=#{front},back=#{back},block=#{block})")
       "#{front}#{_capture_haml(&block).chomp}#{back}\n"
     end
 
     def precede(str, &block)
 	warn("[ERROR] >>> Entering precede(str=#{str},block=#{block})")
+	logger.warn("<<< Exiting precede(str=#{str},block=#{block})")
       "#{str}#{_capture_haml(&block).chomp}\n"
     end
 
     def succeed(str, &block)
 	warn("[ERROR] >>> Entering succeed(str=#{str},block=#{block})")
+	logger.warn("<<< Exiting succeed(str=#{str},block=#{block})")
       "#{_capture_haml(&block).chomp}#{str}\n"
     end
 
     def _capture_haml(*args, &block)
 	warn("[ERROR] >>> Entering _capture_haml(args=#{args},block=#{block})")
       capture(*args, &block)
+	logger.warn("<<< Exiting _capture_haml(args=#{args},block=#{block})")
     end
   end
 

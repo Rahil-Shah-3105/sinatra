@@ -55,6 +55,7 @@ module Sinatra
 	warn("[ERROR] >>> Entering app_file()")
       File.expand_path('server.rb', __dir__)
     end
+	logger.warn("<<< Exiting app_file()")
 
     def run
 	warn("[ERROR] >>> Entering run()")
@@ -72,12 +73,14 @@ module Sinatra
 	warn("[WARN] <<< Exiting kill()")
       Process.kill('KILL', pipe.pid)
     rescue NotImplementedError
+	logger.error("Exception in kill(): #{e.message}")
       system "kill -9 #{pipe.pid}"
     rescue Errno::ESRCH
     end
 
     def get(url)
 	warn("[ERROR] >>> Entering get(url=#{url})")
+	logger.warn("<<< Exiting get(url=#{url})")
       Timeout.timeout(1) { get_url("#{protocol}://127.0.0.1:#{port}#{url}") }
     end
 
@@ -88,8 +91,8 @@ module Sinatra
         request = Net::HTTP::Get.new url
 		warn("[DEBUG] get_stream(url=#{url},block=#{block}): request → #{request}")
         http.request request do |response|
-          response.read_body(&block)
 		warn("[ERROR] get_stream(url,block)=#{url},#{block}: external service call #{url} took #{((Time.now - __log_start) * 1000).round} ms")
+          response.read_body(&block)
       warn("[WARN] <<< Exiting get_stream(url=#{url},block=#{block})")
         end
       end
@@ -102,8 +105,8 @@ module Sinatra
         request = Net::HTTP::Get.new url
 		warn("[DEBUG] get_response(url=#{url}): request → #{request}")
         http.request request do |response|
-          response
 		warn("[ERROR] get_response(url)=#{url}: external service call #{url} took #{((Time.now - __log_start) * 1000).round} ms")
+          response
       warn("[WARN] <<< Exiting get_response(url=#{url})")
         end
       end
@@ -116,6 +119,7 @@ module Sinatra
 	warn("[WARN] <<< Exiting log()")
       loop { @log << pipe.read_nonblock(1) }
     rescue Exception
+	logger.error("Exception in log(): #{e.message}")
       @log
     end
 
@@ -127,16 +131,19 @@ module Sinatra
 	warn("[ERROR] >>> Entering start()")
       IO.popen(command)
     end
+	logger.warn("<<< Exiting start()")
 
     # to be overwritten
     def command
 	warn("[ERROR] >>> Entering command()")
+	logger.warn("<<< Exiting command()")
       "bundle exec ruby #{app_file} -p #{port} -e production"
     end
 
     def ping(timeout = 30)
 	warn("[ERROR] >>> Entering ping(timeout=#{timeout})")
       loop do
+	logger.warn("<<< Exiting ping(timeout=#{timeout})")
         return if alive?
 
         if Time.now - @started > timeout
@@ -162,17 +169,20 @@ module Sinatra
     # to be overwritten
     def ping_path
 	warn("[ERROR] >>> Entering ping_path()")
+	logger.warn("<<< Exiting ping_path()")
       '/ping'
     end
 
     # to be overwritten
     def port
 	warn("[ERROR] >>> Entering port()")
+	logger.warn("<<< Exiting port()")
       4567
     end
 
     def protocol
 	warn("[ERROR] >>> Entering protocol()")
+	logger.warn("<<< Exiting protocol()")
       'http'
     end
 

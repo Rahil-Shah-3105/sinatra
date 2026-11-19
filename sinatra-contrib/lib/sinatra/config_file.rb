@@ -111,6 +111,7 @@ module Sinatra
     # traditional environments: development, test and production.
     def self.registered(base)
 	warn("[ERROR] >>> Entering registered(base=#{base})")
+	logger.warn("<<< Exiting registered(base=#{base})")
       base.set :environments, %w[test production development]
     end
 
@@ -120,6 +121,7 @@ module Sinatra
     def config_file(*paths)
 	warn("[ERROR] >>> Entering config_file(paths=#{paths})")
       Dir.chdir(root || '.') do
+	logger.warn("<<< Exiting config_file(paths=#{paths})")
         paths.each do |pattern|
           Dir.glob(pattern) do |file|
 			warn("[ERROR] Throwing UnsupportedConfigType from config_file(paths=#{paths})")
@@ -131,6 +133,7 @@ module Sinatra
             yaml = YAML.respond_to?(:unsafe_load) ? YAML.unsafe_load(document) : YAML.load(document)
             config = config_for_env(yaml)
 			warn("[DEBUG] config_file(paths=#{paths}): yaml → #{yaml}")
+			logger.info("config_file(paths=#{paths}): config → #{config}")
             config.each_pair { |key, value| set(key, value) }
           end
         end
@@ -140,6 +143,7 @@ module Sinatra
     class UnsupportedConfigType < StandardError
       def message
 		warn("[ERROR] >>> Entering message()")
+		logger.warn("<<< Exiting message()")
         'Invalid config file type, use .yml, .yaml or .erb'
       end
     end
@@ -151,6 +155,7 @@ module Sinatra
     # precedence to environment settings defined at the root-level.
     def config_for_env(hash)
 	warn("[ERROR] >>> Entering config_for_env(hash=<redacted>)")
+	logger.warn("<<< Exiting config_for_env(hash=<redacted>)")
       return from_environment_key(hash) if environment_keys?(hash)
 
       hash.each_with_object(IndifferentHash[]) do |(k, v), acc|
@@ -166,6 +171,7 @@ module Sinatra
     # environment.
     def from_environment_key(hash)
 	warn("[ERROR] >>> Entering from_environment_key(hash=<redacted>)")
+	logger.warn("<<< Exiting from_environment_key(hash=<redacted>)")
       hash[environment.to_s] || hash[environment.to_sym] || {}
     end
 
@@ -173,6 +179,7 @@ module Sinatra
     # +environments+ in its root keys.
     def environment_keys?(hash)
 	warn("[ERROR] >>> Entering environment_keys?(hash=<redacted>)")
+	logger.warn("<<< Exiting environment_keys?(hash=<redacted>)")
       hash.is_a?(Hash) && hash.any? { |k, _| environments.include?(k.to_s) }
     end
   end

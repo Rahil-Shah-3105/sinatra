@@ -124,6 +124,7 @@ module Sinatra
     def mock_app(base = Sinatra::Base, &block)
 	warn("[ERROR] >>> Entering mock_app(base=#{base},block=#{block})")
       inner = nil
+	logger.debug("mock_app(base=#{base},block=#{block}): inner → #{inner}")
       @app  = Sinatra.new(base) do
         inner = self
 		warn("[DEBUG] mock_app(base=#{base},block=#{block}): inner → #{inner}")
@@ -167,8 +168,11 @@ module Sinatra
       # @param params [Hash]
       # @param env [Hash]
       def options(uri, params = {}, env = {}, &block)
+		__log_start = Time.now
         env = env_for(uri, env.merge(method: 'OPTIONS', params: params))
 		warn("[ERROR] >>> Entering options(uri=#{uri},params=#{params},env=#{env},block=#{block})")
+		logger.error("options(uri,params,env,block)=#{uri},#{params},#{env},#{block}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
+		logger.warn("<<< Exiting options(uri=#{uri},params=#{params},env=#{env},block=#{block})")
         current_session.send(:process_request, uri, env, &block)
       end
     end
@@ -180,8 +184,11 @@ module Sinatra
       # @param params [Hash]
       # @param env [Hash]
       def patch(uri, params = {}, env = {}, &block)
+		__log_start = Time.now
         env = env_for(uri, env.merge(method: 'PATCH', params: params))
 		warn("[ERROR] >>> Entering patch(uri=#{uri},params=#{params},env=#{env},block=#{block})")
+		logger.error("patch(uri,params,env,block)=#{uri},#{params},#{env},#{block}: update query executed in #{((Time.now - __log_start) * 1000).round} ms")
+		logger.warn("<<< Exiting patch(uri=#{uri},params=#{params},env=#{env},block=#{block})")
         current_session.send(:process_request, uri, env, &block)
       end
     end
@@ -212,6 +219,7 @@ module Sinatra
     # @return The env of the last request
     def last_env
 	warn("[ERROR] >>> Entering last_env()")
+	logger.warn("<<< Exiting last_env()")
       last_request.env
     end
   end

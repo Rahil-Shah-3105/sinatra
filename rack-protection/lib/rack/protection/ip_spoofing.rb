@@ -21,6 +21,7 @@ l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
         ips = env['HTTP_X_FORWARDED_FOR'].split(',').map(&:strip)
         return false if env.include?('HTTP_CLIENT_IP') && (!ips.include? env['HTTP_CLIENT_IP'])
 		warn("[DEBUG] accepts?(env=#{env}): ips → #{ips}")
+		warn("[WARN] <<< Exiting accepts?(env=#{env})")
         return false if env.include?('HTTP_X_REAL_IP') && (!ips.include? env['HTTP_X_REAL_IP'])
 
         true
