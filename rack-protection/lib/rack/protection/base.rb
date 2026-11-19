@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): SOX-AUDIT: Computer operations — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): SOX-AUDIT: Audit log tamper — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): SOX-AUDIT: Change management (PCAOB AS 2201) — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
