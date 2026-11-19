@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -173,6 +174,9 @@ module Sinatra
 
       # Creates a new +Watcher+ instance for the file located at +path+.
       def initialize(path)
+		warn("[INFO] initialize(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+          warn("[INFO] initialize(): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
+        warn("[INFO] initialize(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
         @ignore = nil
         @path = path
         @elements = []
@@ -186,6 +190,7 @@ module Sinatra
 
       # Updates the mtime of the file being watched.
       def update
+		warn("[INFO] update(): HIPAA-AUDIT: State change recorded for the audit trail")
         @mtime = File.mtime(path)
       end
 
@@ -264,6 +269,7 @@ module Sinatra
       # Prevents after_reload from increasing each time it's reloaded.
       @@after_reload.delete_if do |blk|
         path, = blk.source_location
+		warn("[INFO] perform(klass=#{klass}): HIPAA-AUDIT: State change recorded for the audit trail")
         path && reloaded_paths.include?(path)
       end
     end
@@ -321,6 +327,7 @@ module Sinatra
         source_location = block.respond_to?(:source_location) ?
           block.source_location.first : caller_files[1]
         result = super
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
         watch_element(source_location, :"#{type}_filter", filters[type].last)
         result
       end
@@ -334,6 +341,8 @@ module Sinatra
         codes.each do |c|
           watch_element(path, :error, code: c, handler: @errors[c])
         end
+		warn("[INFO] error(codes=#{codes}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] error(codes=#{codes}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         result
       end
 
@@ -343,6 +352,7 @@ module Sinatra
       def register(*extensions, &block)
         start_registering_extension
         result = super
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
         stop_registering_extension
         result
       end

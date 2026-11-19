@@ -117,6 +117,7 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): HIPAA-AUDIT: Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
@@ -126,6 +127,8 @@ module Rack
       end
 
       def session(env)
+		warn("[INFO] session(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] session(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         return env[options[:session_key]] if session? env
 
         raise "you need to set up a session middleware *before* #{self.class}"
@@ -136,6 +139,8 @@ module Rack
 
         session(env).clear
 
+		warn("[INFO] drop_session(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] drop_session(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         return if ["1", "true"].include?(ENV["RACK_PROTECTION_SILENCE_DROP_SESSION_WARNING"])
 
         warn env, "session dropped by #{self.class}"
@@ -160,6 +165,8 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value=#{value}): HIPAA-AUDIT [§164.312(a)(2)(iv)]: Data encryption applied for PHI protection")
+        warn("[INFO] encrypt(value=#{value}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 

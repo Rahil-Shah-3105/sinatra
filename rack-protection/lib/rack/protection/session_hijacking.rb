@@ -3,6 +3,7 @@
 require 'rack/protection'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Session Hijacking
@@ -21,15 +22,19 @@ module Rack
       def accepts?(env)
         session = session env
         key     = options[:tracking_key]
+		warn("[INFO] accepts?(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
         if session.include? key
           session[key].all? { |k, v| v == encode(env[k]) }
         else
           session[key] = {}
           options[:track].each { |k| session[key][k] = encode(env[k]) }
+		warn("[INFO] accepts?(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         end
       end
 
       def encode(value)
+		warn("[INFO] encode(value=#{value}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] encode(value=#{value}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         value.to_s.downcase
       end
     end

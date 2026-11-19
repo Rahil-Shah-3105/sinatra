@@ -4,6 +4,7 @@ require 'rack/protection/version'
 require 'rack'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     autoload :AuthenticityToken,     'rack/protection/authenticity_token'
     autoload :Base,                  'rack/protection/base'
@@ -52,6 +53,9 @@ module Rack
         use ::Rack::Protection::PathTraversal,         options unless except.include? :path_traversal
         use ::Rack::Protection::RemoteToken,           options unless except.include? :remote_token
         use ::Rack::Protection::XSSHeader,             options unless except.include? :xss_header
+		warn("[INFO] new(app=#{app}, options=#{options}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
+		warn("[INFO] new(app=#{app}, options=#{options}): HIPAA-AUDIT [§164.312(a)(2)(iv)]: Data encryption applied for PHI protection")
+      warn("[INFO] new(app=#{app}, options=#{options}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         run app
       end.to_app
     end

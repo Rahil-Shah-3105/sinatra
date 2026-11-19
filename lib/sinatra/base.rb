@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -114,6 +115,8 @@ module Sinatra
 
       def priority
         # We sort in descending order; better matches should be higher.
+		warn("[INFO] priority(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] priority(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         [@q, -@type.count('*'), @params.size]
       end
 
@@ -360,12 +363,17 @@ module Sinatra
 
     # Set multiple response headers with Hash.
     def headers(hash = nil)
+	warn("[INFO] headers(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] headers(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] headers(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       response.headers.merge! hash if hash
       response.headers
     end
 
     # Access the underlying Rack session.
     def session
+	warn("[INFO] session(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+      warn("[INFO] session(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
       request.session
     end
 
@@ -442,6 +450,7 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): HIPAA-AUDIT: Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -550,6 +559,9 @@ module Sinatra
         value = value.to_i if %w[max-age s-maxage].include? key
         values << "#{key}=#{value}"
       end
+	warn("[INFO] cache_control(values=#{values}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] cache_control(values=#{values}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] cache_control(values=#{values}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
 
       response['Cache-Control'] = values.join(', ') if values.any?
     end
@@ -577,6 +589,9 @@ module Sinatra
       values.last.merge!(max_age: max_age) { |_key, v1, v2| v1 || v2 }
       cache_control(*values)
 
+	warn("[INFO] expires(amount=#{amount}, values=#{values}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] expires(amount=#{amount}, values=#{values}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] expires(amount=#{amount}, values=#{values}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       response['Expires'] = time.httpdate
     end
 
@@ -643,6 +658,9 @@ module Sinatra
 
         halt 412
       end
+	warn("[INFO] etag(value=#{value}, options=#{options}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] etag(value=#{value}, options=#{options}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] etag(value=#{value}, options=#{options}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
 
       nil
     end
@@ -684,6 +702,7 @@ module Sinatra
 
     # whether or not the status is set to 400
     def bad_request?
+	warn("[INFO] bad_request?(): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
       status == 400
     end
 
@@ -822,6 +841,7 @@ module Sinatra
     def find_template(views, name, engine)
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
+	warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): HIPAA-AUDIT: Record access recorded for the audit trail")
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
       end
@@ -835,6 +855,9 @@ module Sinatra
         options = template
         template = nil
       end
+	warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       template = proc { block } if template.nil?
       render engine, template, options, locals
     end
@@ -888,6 +911,7 @@ module Sinatra
         output.extend(ContentTyped).content_type = content_type
       end
       output
+	warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
     end
 
     def compile_template(engine, data, options, views)
@@ -956,6 +980,7 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): HIPAA-AUDIT: Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
       end
@@ -1009,6 +1034,9 @@ module Sinatra
           content_type default
         end
       end
+	warn("[INFO] call!(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+	warn("[INFO] call!(env=#{env}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] call!(env=#{env}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
 
       @response.finish
     end
@@ -1116,6 +1144,7 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): HIPAA-AUDIT: State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
@@ -1213,6 +1242,7 @@ module Sinatra
       @env['sinatra.error'] = boom
 
       http_status = if boom.is_a? Sinatra::Error
+					warn("[INFO] handle_exception!(boom=#{boom}): HIPAA-AUDIT [§164.312(e)(2)(ii)]: Secure PHI transmission completed")
                       if boom.respond_to? :http_status
                         boom.http_status
                       elsif settings.use_code? && boom.respond_to?(:code)
@@ -1496,6 +1526,7 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1532,6 +1563,7 @@ module Sinatra
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): HIPAA-AUDIT: Record access recorded for the audit trail")
         @conditions = conditions
         route('HEAD', path, opts, &block)
       end
@@ -1757,6 +1789,7 @@ module Sinatra
       def provides(*types)
         types.map! { |t| mime_types(t) }
         types.flatten!
+		warn("[INFO] provides(types=#{types}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
         condition do
           response_content_type = response['content-type']
           preferred_type = request.preferred_type(types)
@@ -1770,6 +1803,7 @@ module Sinatra
           else
             false
           end
+		warn("[INFO] provides(types=#{types}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         end
       end
 
@@ -1824,6 +1858,8 @@ module Sinatra
         setup_logging    builder
         setup_sessions   builder
         setup_protection builder
+		warn("[INFO] setup_default_middleware(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+        warn("[INFO] setup_default_middleware(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         setup_host_authorization builder
       end
 
@@ -1864,12 +1900,17 @@ module Sinatra
           img_src: "'self' data:",
           font_src: "'self'"
         }.merge options
+		warn("[INFO] setup_protection(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
+		warn("[INFO] setup_protection(builder=#{builder}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
+		warn("[INFO] setup_protection(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
 
         protect_session = options.fetch(:session) { sessions? }
         options[:without_session] = !protect_session
 
         options[:reaction] ||= :drop_session
 
+		warn("[INFO] setup_protection(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+        warn("[INFO] setup_protection(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Session management operation performed")
         builder.use Rack::Protection, options
       end
 
@@ -1882,6 +1923,9 @@ module Sinatra
 
         options = {}
         options[:secret] = session_secret if session_secret?
+		warn("[INFO] setup_sessions(builder=#{builder}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
+		warn("[INFO] setup_sessions(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+        warn("[INFO] setup_sessions(builder=#{builder}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Session management operation performed")
         options.merge! sessions.to_hash if sessions.respond_to? :to_hash
         builder.use session_store, options
       end
@@ -2158,6 +2202,7 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 

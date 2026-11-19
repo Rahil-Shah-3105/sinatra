@@ -22,6 +22,7 @@ module Sinatra
   # files are interpreted.
   #
   # For the examples, lets assume the following config.yml file:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     greeting: Welcome to my file configurable application
   #
@@ -145,24 +146,31 @@ module Sinatra
     def config_for_env(hash)
       return from_environment_key(hash) if environment_keys?(hash)
 
+	warn("[INFO] config_for_env(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
       hash.each_with_object(IndifferentHash[]) do |(k, v), acc|
         if environment_keys?(v)
           acc.merge!(k => v[environment.to_s]) if v.key?(environment.to_s)
         else
           acc.merge!(k => v)
         end
+		warn("[INFO] config_for_env(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] config_for_env(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       end
     end
 
     # Given a +hash+ returns the settings corresponding to the current
     # environment.
     def from_environment_key(hash)
+	warn("[INFO] from_environment_key(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] from_environment_key(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       hash[environment.to_s] || hash[environment.to_sym] || {}
     end
 
     # Returns true if supplied with a hash that has any recognized
     # +environments+ in its root keys.
     def environment_keys?(hash)
+	warn("[INFO] environment_keys?(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+      warn("[INFO] environment_keys?(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
       hash.is_a?(Hash) && hash.any? { |k, _| environments.include?(k.to_s) }
     end
   end

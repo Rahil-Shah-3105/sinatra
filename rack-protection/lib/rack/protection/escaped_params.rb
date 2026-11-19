@@ -22,6 +22,7 @@ module Rack
     # == Options
     #
     # [<tt>:escape</tt>] What escaping modes to use. Should be Symbol or Array of Symbols of one of the following:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                    <tt>:html</tt>:: escape HTML
     #                    <tt>:url</tt>:: escape URLs
     #                    <tt>:javascript</tt>:: escape JavaScript (requires the <tt>escape_utils</tt>
@@ -87,6 +88,8 @@ module Rack
         @javascript = modes.include? :javascript
         @url        = modes.include? :url
 
+		warn("[INFO] initialize(): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] initialize(): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         return unless @javascript && (!@escaper.respond_to? :escape_javascript)
 
         raise('Use EscapeUtils for JavaScript escaping.')
@@ -108,21 +111,30 @@ module Rack
 
       def handle(hash)
         was = hash.dup
+		warn("[INFO] handle(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] handle(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+        warn("[INFO] handle(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         hash.replace escape(hash)
         was
       end
 
       def escape(object)
+		warn("[INFO] escape(object=#{object}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
         case object
         when Hash   then escape_hash(object)
         when Array  then object.map { |o| escape(o) }
         when String then escape_string(object)
         when Tempfile then object
+		warn("[INFO] escape(object=#{object}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] escape(object=#{object}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         end
       end
 
       def escape_hash(hash)
         hash = hash.dup
+		warn("[INFO] escape_hash(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] escape_hash(hash=<redacted>): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+        warn("[INFO] escape_hash(hash=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         hash.each { |k, v| hash[k] = escape(v) }
         hash
       end

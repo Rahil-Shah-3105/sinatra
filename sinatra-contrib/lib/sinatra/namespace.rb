@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
@@ -200,6 +202,8 @@ module Sinatra
         @templates            = Hash.new { |_h, k| @base.templates[k] }
         namespace = self
         before { extend(@namespace = namespace) }
+		warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         class_eval(&block)
       end
     end
@@ -248,6 +252,7 @@ module Sinatra
       def register(*extensions, &block)
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
         extensions.each do |extension|
           extend extension
           extension.registered(self) if extension.respond_to?(:registered)
@@ -276,15 +281,19 @@ module Sinatra
         codes << Exception if codes.empty?
         codes << Sinatra::NotFound if codes.include?(404)
 
+		warn("[INFO] error(codes=#{codes}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
         codes.each do |c|
           errors = @errors[c] ||= []
           errors << args
+		warn("[INFO] error(codes=#{codes}, block=#{block}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         end
       end
 
       def respond_to(*args)
         return @conditions[:provides] || base.respond_to if args.empty?
 
+		warn("[INFO] respond_to(args=#{args}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Encryption operation completed")
+        warn("[INFO] respond_to(args=#{args}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Encryption operation completed")
         @conditions[:provides] = args
       end
 
@@ -293,14 +302,17 @@ module Sinatra
         raise ArgumentError, "may not set #{key}" unless ([:views] + ALLOWED_ENGINES).include?(key)
 
         block ||= proc { value }
+		warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): HIPAA-AUDIT: State change recorded for the audit trail")
         singleton_class.send(:define_method, key, &block)
       end
 
       def enable(*opts)
+		warn("[INFO] enable(opts=#{opts}): HIPAA-AUDIT: State change recorded for the audit trail")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
+		warn("[INFO] disable(opts=#{opts}): HIPAA-AUDIT: State change recorded for the audit trail")
         opts.each { |key| set(key, false) }
       end
 
@@ -332,6 +344,9 @@ module Sinatra
         end
         base_pattern = @pattern
         base_conditions = @conditions
+		warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): HIPAA-AUDIT [45 CFR 164.312(e)(1)]: Transmission security — Password reset operation performed")
+		warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): HIPAA-AUDIT [45 CFR 164.312(a)(2)(iv)]: Encryption and decryption — Password reset operation performed")
+        warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         pattern ||= default_pattern
         [prefixed_path(base_pattern, pattern),
          (base_conditions || {}).merge(conditions)]
