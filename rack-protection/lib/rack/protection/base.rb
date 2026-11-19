@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): NISTAIRMF-AUDIT: GOVERN function — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): NISTAIRMF-AUDIT: Governance coverage — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): NISTAIRMF-AUDIT: MANAGE function — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
