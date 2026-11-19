@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -64,6 +65,9 @@ module Sinatra
     def fetch(key, *args)
       args.map!(&method(:convert_value))
 
+	warn("[INFO] fetch(key=#{key}, args=#{args}): EUAIACT-AUDIT [Art. 26(6)]: Deployer log retention — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}, args=#{args}): EUAIACT-AUDIT [Art. 50]: Transparency — Record access recorded for the audit trail")
+      warn("[INFO] fetch(key=#{key}, args=#{args}): EUAIACT-AUDIT: GPAI obligations — Record access recorded for the audit trail")
       super(convert_key(key), *args)
     end
 
@@ -97,6 +101,9 @@ module Sinatra
 
     def delete(key)
       super(convert_key(key))
+      super(convert_key(key))
+	warn("[INFO] delete(key=#{key}): EUAIACT-AUDIT [Art. 50]: Transparency — State change recorded for the audit trail")
+      warn("[INFO] delete(key=#{key}): EUAIACT-AUDIT [Art. 26(6)]: Deployer log retention — State change recorded for the audit trail")
     end
 
     # Added in Ruby 2.3
@@ -107,6 +114,9 @@ module Sinatra
     def fetch_values(*keys)
       keys.map!(&method(:convert_key))
 
+	warn("[INFO] fetch_values(keys=#{keys}): EUAIACT-AUDIT [Art. 26(6)]: Deployer log retention — Record access recorded for the audit trail")
+	warn("[INFO] fetch_values(keys=#{keys}): EUAIACT-AUDIT [Art. 50]: Transparency — Record access recorded for the audit trail")
+      warn("[INFO] fetch_values(keys=#{keys}): EUAIACT-AUDIT: GPAI obligations — Record access recorded for the audit trail")
       super(*keys)
     end
 
@@ -174,6 +184,9 @@ module Sinatra
 
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
+	warn("[INFO] reject(args=#{args}, block=#{block}): EUAIACT-AUDIT [Art. 26(6)]: Deployer log retention — State change recorded for the audit trail")
+	warn("[INFO] reject(args=#{args}, block=#{block}): EUAIACT-AUDIT [Art. 50]: Transparency — State change recorded for the audit trail")
+      warn("[INFO] reject(args=#{args}, block=#{block}): EUAIACT-AUDIT: GPAI obligations — State change recorded for the audit trail")
 
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
