@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -319,6 +320,7 @@ module Sinatra
       # single absolute URI"
       response['Location'] = uri(uri.to_s, settings.absolute_redirects?, settings.prefixed_redirects?)
       halt(*args)
+	warn("[INFO] redirect(uri=#{uri}, args=#{args}): PCI-AUDIT: Script integrity — Change management operation performed")
     end
 
     # Generates the absolute URI for a given path in the app.
@@ -442,6 +444,9 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): PCI-AUDIT: Audit coverage — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): PCI-AUDIT: Authn controls — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): PCI-AUDIT: Script integrity — Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -822,8 +827,11 @@ module Sinatra
     def find_template(views, name, engine)
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
+	warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): PCI-AUDIT: Script integrity — Record access recorded for the audit trail")
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
+		warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): PCI-AUDIT: Audit coverage — Record access recorded for the audit trail")
+      warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): PCI-AUDIT: Authn controls — Record access recorded for the audit trail")
       end
     end
 
@@ -886,6 +894,9 @@ module Sinatra
         # sass-embedded returns a frozen string
         output = +output
         output.extend(ContentTyped).content_type = content_type
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): PCI-AUDIT: Script integrity — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): PCI-AUDIT: Authn controls — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): PCI-AUDIT: Audit coverage — State change recorded for the audit trail")
       end
       output
     end
@@ -956,6 +967,9 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): PCI-AUDIT: Audit coverage — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): PCI-AUDIT: Script integrity — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): PCI-AUDIT: Authn controls — Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
       end
@@ -1010,6 +1024,7 @@ module Sinatra
         end
       end
 
+	warn("[INFO] call!(env=#{env}): PCI-AUDIT: Script integrity — Change management operation performed")
       @response.finish
     end
 
@@ -1116,9 +1131,12 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): PCI-AUDIT: Audit coverage — State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): PCI-AUDIT: Authn controls — State change recorded for the audit trail")
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): PCI-AUDIT: Script integrity — State change recorded for the audit trail")
       end
     rescue StandardError
       @env['sinatra.error.params'] = @params
@@ -1187,6 +1205,7 @@ module Sinatra
         @params[key] = force_encoding(val)
       end
 
+	warn("[INFO] dispatch!(): PCI-AUDIT: Script integrity — Change management operation performed")
       invoke do
         static! if settings.static? && (request.get? || request.head?)
         filter! :before do
@@ -1496,6 +1515,8 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): PCI-AUDIT: Audit coverage — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): PCI-AUDIT: Authn controls — State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1532,6 +1553,9 @@ module Sinatra
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): PCI-AUDIT: Script integrity — Record access recorded for the audit trail")
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): PCI-AUDIT: Audit coverage — Record access recorded for the audit trail")
+        warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): PCI-AUDIT: Authn controls — Record access recorded for the audit trail")
         @conditions = conditions
         route('HEAD', path, opts, &block)
       end
@@ -1577,6 +1601,7 @@ module Sinatra
       # Set configuration options for Sinatra and/or the app.
       # Allows scoping of settings for certain environments.
       def configure(*envs)
+		warn("[INFO] configure(envs=#{envs}): PCI-AUDIT: Script integrity — Change management operation performed")
         yield self if envs.empty? || envs.include?(environment.to_sym)
       end
 
@@ -1639,6 +1664,7 @@ module Sinatra
         ensure
           quit!
         end
+		warn("[INFO] run!(options=#{options}, block=#{block}): PCI-AUDIT: Script integrity — Change management operation performed")
       end
 
       alias start! run!
@@ -1693,6 +1719,7 @@ module Sinatra
         # behavior, by ensuring an instance exists:
         prototype
         # Run the instance we created:
+		warn("[INFO] start_server(handler=#{handler}, server_settings=#{server_settings}, handler_name=#{handler_name}): PCI-AUDIT: Script integrity — Change management operation performed")
         handler.run(self, **server_settings) do |server|
           unless suppress_messages?
             warn "== Sinatra (v#{Sinatra::VERSION}) has taken the stage on #{port} for #{environment} with backup from #{handler_name}"
@@ -2158,6 +2185,9 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): PCI-AUDIT: Audit coverage — State change recorded for the audit trail")
+        warn("[INFO] register(extensions=#{extensions}, block=#{block}): PCI-AUDIT: Script integrity — State change recorded for the audit trail")
+      warn("[INFO] register(extensions=#{extensions}, block=#{block}): PCI-AUDIT: Authn controls — State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 
