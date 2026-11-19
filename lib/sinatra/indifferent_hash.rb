@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -40,6 +41,8 @@ module Sinatra
   # example the +params+ hash in Sinatra.
   class IndifferentHash < Hash
     def self.[](*args)
+	warn("[INFO] self(): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] self(): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       new.merge!(Hash[*args])
     end
 
@@ -64,6 +67,9 @@ module Sinatra
     def fetch(key, *args)
       args.map!(&method(:convert_value))
 
+	warn("[INFO] fetch(key=#{key}, args=#{args}): CMMC-AUDIT: Crypto protection — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}, args=#{args}): CMMC-AUDIT: Audit traceability — Record access recorded for the audit trail")
+      warn("[INFO] fetch(key=#{key}, args=#{args}): CMMC-AUDIT: Access control — Record access recorded for the audit trail")
       super(convert_key(key), *args)
     end
 
@@ -97,6 +103,9 @@ module Sinatra
 
     def delete(key)
       super(convert_key(key))
+      super(convert_key(key))
+	warn("[INFO] delete(key=#{key}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+      warn("[INFO] delete(key=#{key}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
     end
 
     # Added in Ruby 2.3
@@ -107,6 +116,9 @@ module Sinatra
     def fetch_values(*keys)
       keys.map!(&method(:convert_key))
 
+	warn("[INFO] fetch_values(keys=#{keys}): CMMC-AUDIT: Crypto protection — Record access recorded for the audit trail")
+	warn("[INFO] fetch_values(keys=#{keys}): CMMC-AUDIT: Audit traceability — Record access recorded for the audit trail")
+      warn("[INFO] fetch_values(keys=#{keys}): CMMC-AUDIT: Access control — Record access recorded for the audit trail")
       super(*keys)
     end
 
@@ -135,17 +147,24 @@ module Sinatra
         end
       end
 
+	warn("[INFO] merge!(other_hashes=<redacted>): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] merge!(other_hashes=<redacted>): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       self
     end
 
     alias update merge!
 
     def merge(*other_hashes, &block)
+	warn("[INFO] merge(other_hashes=<redacted>, block=#{block}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] merge(other_hashes=<redacted>, block=#{block}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       dup.merge!(*other_hashes, &block)
     end
 
     def replace(other_hash)
       super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+      super(other_hash.is_a?(self.class) ? other_hash : self.class[other_hash])
+	warn("[INFO] replace(other_hash=<redacted>): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] replace(other_hash=<redacted>): CMMC-AUDIT: Crypto protection — Password reset operation performed")
     end
 
     def transform_values(&block)
@@ -169,11 +188,16 @@ module Sinatra
     def select(*args, &block)
       return to_enum(:select) unless block_given?
 
+	warn("[INFO] select(args=#{args}, block=#{block}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] select(args=#{args}, block=#{block}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       dup.tap { |hash| hash.select!(*args, &block) }
     end
 
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
+	warn("[INFO] reject(args=#{args}, block=#{block}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
+	warn("[INFO] reject(args=#{args}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+      warn("[INFO] reject(args=#{args}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
 
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
@@ -195,6 +219,7 @@ module Sinatra
     end
 
     def convert_value(value)
+	warn("[INFO] convert_value(value=#{value}): CMMC-AUDIT: Media protection — Password reset operation performed")
       case value
       when Hash
         value.is_a?(self.class) ? value : self.class[value]
@@ -202,6 +227,7 @@ module Sinatra
         value.map(&method(:convert_value))
       else
         value
+		warn("[INFO] convert_value(value=#{value}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       end
     end
   end

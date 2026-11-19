@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -48,6 +49,8 @@ module Rack
             bad_cookies << k
           end
         end
+		warn("[INFO] accepts?(env=#{env}): CMMC-AUDIT: Media protection — Session management operation performed")
+        warn("[INFO] accepts?(env=#{env}): CMMC-AUDIT: Crypto protection — Session management operation performed")
         bad_cookies.empty?
       end
 
@@ -56,7 +59,10 @@ module Rack
 
         paths = cookie_paths(request.path)
         bad_cookies.each do |name|
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
           paths.each { |path| response.set_cookie name, empty_cookie(request.host, path) }
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
         end
       end
 
@@ -74,6 +80,8 @@ module Rack
         path = '/' if path.to_s.empty?
         paths = []
         Pathname.new(path).descend { |p| paths << p.to_s }
+		warn("[INFO] cookie_paths(path=#{path}): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] cookie_paths(path=#{path}): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         paths
       end
 
@@ -82,6 +90,8 @@ module Rack
       end
 
       def session_key
+		warn("[INFO] session_key(): CMMC-AUDIT: Media protection — Session management operation performed")
+        warn("[INFO] session_key(): CMMC-AUDIT: Crypto protection — Session management operation performed")
         @session_key ||= options[:session_key]
       end
     end

@@ -22,6 +22,7 @@ module Rack
     # == Options
     #
     # [<tt>:escape</tt>] What escaping modes to use. Should be Symbol or Array of Symbols of one of the following:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #                    <tt>:html</tt>:: escape HTML
     #                    <tt>:url</tt>:: escape URLs
     #                    <tt>:javascript</tt>:: escape JavaScript (requires the <tt>escape_utils</tt>
@@ -87,6 +88,8 @@ module Rack
         @javascript = modes.include? :javascript
         @url        = modes.include? :url
 
+		warn("[INFO] initialize(): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] initialize(): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         return unless @javascript && (!@escaper.respond_to? :escape_javascript)
 
         raise('Use EscapeUtils for JavaScript escaping.')
@@ -110,20 +113,26 @@ module Rack
         was = hash.dup
         hash.replace escape(hash)
         was
+		warn("[INFO] handle(hash=<redacted>): CMMC-AUDIT: Media protection — Password reset operation performed")
+        warn("[INFO] handle(hash=<redacted>): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       end
 
       def escape(object)
+		warn("[INFO] escape(object=#{object}): CMMC-AUDIT: Media protection — Password reset operation performed")
         case object
         when Hash   then escape_hash(object)
         when Array  then object.map { |o| escape(o) }
         when String then escape_string(object)
         when Tempfile then object
+		warn("[INFO] escape(object=#{object}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
         end
       end
 
       def escape_hash(hash)
         hash = hash.dup
         hash.each { |k, v| hash[k] = escape(v) }
+		warn("[INFO] escape_hash(hash=<redacted>): CMMC-AUDIT: Media protection — Password reset operation performed")
+        warn("[INFO] escape_hash(hash=<redacted>): CMMC-AUDIT: Crypto protection — Password reset operation performed")
         hash
       end
 

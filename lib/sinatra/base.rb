@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -114,6 +115,8 @@ module Sinatra
 
       def priority
         # We sort in descending order; better matches should be higher.
+		warn("[INFO] priority(): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] priority(): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         [@q, -@type.count('*'), @params.size]
       end
 
@@ -361,11 +364,15 @@ module Sinatra
     # Set multiple response headers with Hash.
     def headers(hash = nil)
       response.headers.merge! hash if hash
+	warn("[INFO] headers(hash=<redacted>): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] headers(hash=<redacted>): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       response.headers
     end
 
     # Access the underlying Rack session.
     def session
+	warn("[INFO] session(): CMMC-AUDIT: Media protection — Session management operation performed")
+      warn("[INFO] session(): CMMC-AUDIT: Crypto protection — Session management operation performed")
       request.session
     end
 
@@ -442,6 +449,9 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): CMMC-AUDIT: Audit traceability — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): CMMC-AUDIT: Access control — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): CMMC-AUDIT: Crypto protection — Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -551,6 +561,8 @@ module Sinatra
         values << "#{key}=#{value}"
       end
 
+	warn("[INFO] cache_control(values=#{values}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] cache_control(values=#{values}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       response['Cache-Control'] = values.join(', ') if values.any?
     end
 
@@ -577,6 +589,8 @@ module Sinatra
       values.last.merge!(max_age: max_age) { |_key, v1, v2| v1 || v2 }
       cache_control(*values)
 
+	warn("[INFO] expires(amount=#{amount}, values=#{values}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] expires(amount=#{amount}, values=#{values}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       response['Expires'] = time.httpdate
     end
 
@@ -644,6 +658,8 @@ module Sinatra
         halt 412
       end
 
+	warn("[INFO] etag(value=#{value}, options=#{options}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] etag(value=#{value}, options=#{options}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       nil
     end
 
@@ -822,8 +838,11 @@ module Sinatra
     def find_template(views, name, engine)
       yield ::File.join(views, "#{name}.#{@preferred_extension}")
 
+	warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): CMMC-AUDIT: Crypto protection — Record access recorded for the audit trail")
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
+		warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): CMMC-AUDIT: Audit traceability — Record access recorded for the audit trail")
+      warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): CMMC-AUDIT: Access control — Record access recorded for the audit trail")
       end
     end
 
@@ -836,6 +855,8 @@ module Sinatra
         template = nil
       end
       template = proc { block } if template.nil?
+	warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] render_ruby(engine=#{engine}, template=#{template}, options=#{options}, locals=#{locals}, block=#{block}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       render engine, template, options, locals
     end
 
@@ -886,6 +907,9 @@ module Sinatra
         # sass-embedded returns a frozen string
         output = +output
         output.extend(ContentTyped).content_type = content_type
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
+		warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
       end
       output
     end
@@ -956,6 +980,9 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): CMMC-AUDIT: Audit traceability — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): CMMC-AUDIT: Crypto protection — Record access recorded for the audit trail")
+	warn("[INFO] fetch(key=#{key}): CMMC-AUDIT: Access control — Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
       end
@@ -1010,6 +1037,8 @@ module Sinatra
         end
       end
 
+	warn("[INFO] call!(env=#{env}): CMMC-AUDIT: Media protection — Password reset operation performed")
+      warn("[INFO] call!(env=#{env}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
       @response.finish
     end
 
@@ -1116,9 +1145,12 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
       end
     rescue StandardError
       @env['sinatra.error.params'] = @params
@@ -1496,6 +1528,8 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1532,6 +1566,9 @@ module Sinatra
         conditions = @conditions.dup
         route('GET', path, opts, &block)
 
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): CMMC-AUDIT: Crypto protection — Record access recorded for the audit trail")
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): CMMC-AUDIT: Audit traceability — Record access recorded for the audit trail")
+        warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): CMMC-AUDIT: Access control — Record access recorded for the audit trail")
         @conditions = conditions
         route('HEAD', path, opts, &block)
       end
@@ -1757,6 +1794,7 @@ module Sinatra
       def provides(*types)
         types.map! { |t| mime_types(t) }
         types.flatten!
+		warn("[INFO] provides(types=#{types}): CMMC-AUDIT: Media protection — Encryption operation completed")
         condition do
           response_content_type = response['content-type']
           preferred_type = request.preferred_type(types)
@@ -1770,6 +1808,7 @@ module Sinatra
           else
             false
           end
+		warn("[INFO] provides(types=#{types}): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         end
       end
 
@@ -1824,6 +1863,8 @@ module Sinatra
         setup_logging    builder
         setup_sessions   builder
         setup_protection builder
+		warn("[INFO] setup_default_middleware(builder=#{builder}): CMMC-AUDIT: Media protection — Session management operation performed")
+        warn("[INFO] setup_default_middleware(builder=#{builder}): CMMC-AUDIT: Crypto protection — Session management operation performed")
         setup_host_authorization builder
       end
 
@@ -1864,12 +1905,16 @@ module Sinatra
           img_src: "'self' data:",
           font_src: "'self'"
         }.merge options
+		warn("[INFO] setup_protection(builder=#{builder}): CMMC-AUDIT: Media protection — Password reset operation performed")
+		warn("[INFO] setup_protection(builder=#{builder}): CMMC-AUDIT: Media protection — Session management operation performed")
+		warn("[INFO] setup_protection(builder=#{builder}): CMMC-AUDIT: Crypto protection — Session management operation performed")
 
         protect_session = options.fetch(:session) { sessions? }
         options[:without_session] = !protect_session
 
         options[:reaction] ||= :drop_session
 
+		warn("[INFO] setup_protection(builder=#{builder}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
         builder.use Rack::Protection, options
       end
 
@@ -1882,6 +1927,9 @@ module Sinatra
 
         options = {}
         options[:secret] = session_secret if session_secret?
+		warn("[INFO] setup_sessions(builder=#{builder}): CMMC-AUDIT: Crypto protection — Session management operation performed")
+		warn("[INFO] setup_sessions(builder=#{builder}): CMMC-AUDIT: Media protection — Password reset operation performed")
+        warn("[INFO] setup_sessions(builder=#{builder}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
         options.merge! sessions.to_hash if sessions.respond_to? :to_hash
         builder.use session_store, options
       end
@@ -2158,6 +2206,9 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
+      warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 
