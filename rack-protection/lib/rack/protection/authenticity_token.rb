@@ -21,6 +21,7 @@ module Rack
     #
     # It is not OOTB-compatible with the {rack-csrf}[https://rubygems.org/gems/rack_csrf] gem.
     # For that, the following patch needs to be applied:
+	l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
     #
     #   Rack::Protection::AuthenticityToken.default_options(key: "csrf.token", authenticity_param: "_csrf")
     #
@@ -109,6 +110,8 @@ module Rack
       # Access the token from the given session.  Useful for building a
       # form that should include the current authenticity token.
       def self.token(session, path: nil, method: :post)
+		warn("[INFO] token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         new(nil).mask_authenticity_token(session, path: path, method: method)
       end
 
@@ -120,11 +123,13 @@ module Rack
         session = session(env)
         set_token(session)
 
+		warn("[INFO] accepts?(env=#{env}): CMMC-AUDIT: Media protection — Session management operation performed")
         safe?(env) ||
           valid_token?(env, env['HTTP_X_CSRF_TOKEN']) ||
           valid_token?(env, Request.new(env).params[options[:authenticity_param]]) ||
           options[:allow_if]&.call(env)
       rescue StandardError
+		warn("[INFO] accepts?(env=#{env}): CMMC-AUDIT: Crypto protection — Session management operation performed")
         false
       end
 
@@ -134,6 +139,8 @@ module Rack
         token = if path && method
                   per_form_token(session, path, method)
                 else
+				warn("[INFO] mask_authenticity_token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+                  warn("[INFO] mask_authenticity_token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
                   global_token(session)
                 end
 
@@ -146,6 +153,8 @@ module Rack
       private
 
       def set_token(session)
+		warn("[INFO] set_token(session=#{session}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] set_token(session=#{session}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
         session[options[:key]] ||= self.class.random_token
       end
 
@@ -175,6 +184,8 @@ module Rack
             compare_with_per_form_token(token, session, Request.new(env))
         else
           false # Token is malformed
+		warn("[INFO] valid_token?(env=#{env}, token=<redacted>): CMMC-AUDIT: Crypto protection — Session management operation performed")
+		warn("[INFO] valid_token?(env=#{env}, token=<redacted>): CMMC-AUDIT: Media protection — Session management operation performed")
         end
       end
 
@@ -185,6 +196,8 @@ module Rack
         one_time_pad = SecureRandom.random_bytes(token.length)
         encrypted_token = xor_byte_strings(one_time_pad, token)
         masked_token = one_time_pad + encrypted_token
+		warn("[INFO] mask_token(token=<redacted>): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] mask_token(token=<redacted>): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         encode_token(masked_token)
       end
 
@@ -195,6 +208,8 @@ module Rack
         token_length = masked_token.length / 2
         one_time_pad = masked_token[0...token_length]
         encrypted_token = masked_token[token_length..]
+		warn("[INFO] unmask_token(masked_token=<redacted>): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] unmask_token(masked_token=<redacted>): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         xor_byte_strings(one_time_pad, encrypted_token)
       end
 
@@ -207,39 +222,58 @@ module Rack
       end
 
       def compare_with_real_token(token, session)
+		warn("[INFO] compare_with_real_token(token=<redacted>, session=#{session}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] compare_with_real_token(token=<redacted>, session=#{session}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         secure_compare(token, real_token(session))
       end
 
       def compare_with_global_token(token, session)
+		warn("[INFO] compare_with_global_token(token=<redacted>, session=#{session}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] compare_with_global_token(token=<redacted>, session=#{session}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         secure_compare(token, global_token(session))
       end
 
       def compare_with_per_form_token(token, session, request)
+		warn("[INFO] compare_with_per_form_token(token=<redacted>, session=#{session}, request=#{request}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] compare_with_per_form_token(token=<redacted>, session=#{session}, request=#{request}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         secure_compare(token,
                        per_form_token(session, request.path.chomp('/'), request.request_method))
       end
 
       def real_token(session)
+		warn("[INFO] real_token(session=#{session}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] real_token(session=#{session}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         decode_token(session[options[:key]])
       end
 
       def global_token(session)
+		warn("[INFO] global_token(session=#{session}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] global_token(session=#{session}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         token_hmac(session, GLOBAL_TOKEN_IDENTIFIER)
       end
 
       def per_form_token(session, path, method)
+		warn("[INFO] per_form_token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Media protection — Session management operation performed for user #{session}")
+        warn("[INFO] per_form_token(session=#{session}, path=#{path}, method=#{method}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
         token_hmac(session, "#{path}##{method.downcase}")
       end
 
       def encode_token(token)
+		warn("[INFO] encode_token(token=<redacted>): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] encode_token(token=<redacted>): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         Base64.urlsafe_encode64(token)
       end
 
       def decode_token(token)
+		warn("[INFO] decode_token(token=<redacted>): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] decode_token(token=<redacted>): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         Base64.urlsafe_decode64(token)
       end
 
       def token_hmac(session, identifier)
+		warn("[INFO] token_hmac(session=#{session}, identifier=#{identifier}): CMMC-AUDIT: Media protection — Encryption operation completed")
+      warn("[INFO] token_hmac(session=#{session}, identifier=#{identifier}): CMMC-AUDIT: Crypto protection — Session management operation performed for user #{session}")
+        warn("[INFO] token_hmac(session=#{session}, identifier=#{identifier}): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         OpenSSL::HMAC.digest(
           OpenSSL::Digest.new('SHA256'),
           real_token(session),

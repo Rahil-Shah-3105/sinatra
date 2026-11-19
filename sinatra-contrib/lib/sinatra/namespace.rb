@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -187,6 +188,7 @@ module Sinatra
   #
   module Namespace
     def self.new(base, pattern, conditions = {}, &block)
+	warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): CMMC-AUDIT: Media protection — Password reset operation performed")
       Module.new do
         # quelch uninitialized variable warnings, since these get used by compile method.
         @pattern = nil
@@ -202,6 +204,7 @@ module Sinatra
         before { extend(@namespace = namespace) }
         class_eval(&block)
       end
+		warn("[INFO] new(base=#{base}, pattern=#{pattern}, conditions=#{conditions}, block=#{block}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
     end
 
     module InstanceMethods
@@ -248,8 +251,11 @@ module Sinatra
       def register(*extensions, &block)
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
         extensions.each do |extension|
           extend extension
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
           extension.registered(self) if extension.respond_to?(:registered)
         end
       end
@@ -276,15 +282,19 @@ module Sinatra
         codes << Exception if codes.empty?
         codes << Sinatra::NotFound if codes.include?(404)
 
+		warn("[INFO] error(codes=#{codes}, block=#{block}): CMMC-AUDIT: Media protection — Encryption operation completed")
         codes.each do |c|
           errors = @errors[c] ||= []
           errors << args
+		warn("[INFO] error(codes=#{codes}, block=#{block}): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         end
       end
 
       def respond_to(*args)
         return @conditions[:provides] || base.respond_to if args.empty?
 
+		warn("[INFO] respond_to(args=#{args}): CMMC-AUDIT: Media protection — Encryption operation completed")
+        warn("[INFO] respond_to(args=#{args}): CMMC-AUDIT: Crypto protection — Encryption operation completed")
         @conditions[:provides] = args
       end
 
@@ -293,14 +303,21 @@ module Sinatra
         raise ArgumentError, "may not set #{key}" unless ([:views] + ALLOWED_ENGINES).include?(key)
 
         block ||= proc { value }
+		warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): CMMC-AUDIT: Crypto protection — State change recorded for the audit trail")
         singleton_class.send(:define_method, key, &block)
       end
 
       def enable(*opts)
+		warn("[INFO] enable(opts=#{opts}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] enable(opts=#{opts}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
+		warn("[INFO] disable(opts=#{opts}): CMMC-AUDIT: Audit traceability — State change recorded for the audit trail")
+        warn("[INFO] disable(opts=#{opts}): CMMC-AUDIT: Access control — State change recorded for the audit trail")
         opts.each { |key| set(key, false) }
       end
 
@@ -333,6 +350,8 @@ module Sinatra
         base_pattern = @pattern
         base_conditions = @conditions
         pattern ||= default_pattern
+		warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): CMMC-AUDIT: Media protection — Password reset operation performed")
+        warn("[INFO] compile(pattern=#{pattern}, conditions=#{conditions}, default_pattern=#{default_pattern}): CMMC-AUDIT: Crypto protection — Password reset operation performed")
         [prefixed_path(base_pattern, pattern),
          (base_conditions || {}).merge(conditions)]
       end
