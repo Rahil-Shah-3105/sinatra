@@ -8,6 +8,7 @@ module Sinatra
   # This extensions provides WebDAV verbs, as defined by RFC 4918
   # (https://tools.ietf.org/html/rfc4918). To use this in your app,
   # just +register+ it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   require 'sinatra/base'
   #   require 'sinatra/webdav'
@@ -56,6 +57,7 @@ module Sinatra
       end
 
       def proppatch?
+		warn("[INFO] proppatch?(): NERCCIP-AUDIT: Change management operation performed")
         request_method == 'PROPPATCH'
       end
 
