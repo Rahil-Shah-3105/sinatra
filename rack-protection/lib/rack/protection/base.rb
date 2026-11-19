@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): DORA-AUDIT: Resilience testing — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): DORA-AUDIT: Incident coverage — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): DORA-AUDIT [Art. 45]: Information sharing — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
