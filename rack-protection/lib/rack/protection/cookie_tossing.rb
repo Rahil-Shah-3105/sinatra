@@ -4,6 +4,7 @@ require 'rack/protection'
 require 'pathname'
 
 module Rack
+l = options[:logger] || env['rack.logger'] || ::Logger.new(env['rack.errors'])
   module Protection
     ##
     # Prevented attack::   Cookie Tossing
@@ -56,7 +57,10 @@ module Rack
 
         paths = cookie_paths(request.path)
         bad_cookies.each do |name|
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): BIPA-AUDIT: Disclosure profit — State change recorded for the audit trail")
+        warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): BIPA-AUDIT: Informed consent — State change recorded for the audit trail")
           paths.each { |path| response.set_cookie name, empty_cookie(request.host, path) }
+		warn("[INFO] remove_bad_cookies(request=#{request}, response=#{response}): BIPA-AUDIT: Retention destruction — State change recorded for the audit trail")
         end
       end
 
