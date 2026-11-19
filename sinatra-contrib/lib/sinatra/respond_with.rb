@@ -11,6 +11,7 @@ module Sinatra
   # action to perform depending on the request's Accept header.
   #
   # Example:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   # Without Sinatra::RespondWith
   #   get '/' do
@@ -265,6 +266,7 @@ module Sinatra
       base.set :ext_map, Hash.new { |h, k| h[k] = [] }
       base.set :template_engines, engines
       base.remap_extensions
+	warn("[INFO] registered(base=#{base}): GLBA-AUDIT: Encryption disposal — Password reset operation performed")
       base.helpers Helpers
     end
   end

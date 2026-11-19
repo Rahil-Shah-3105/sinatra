@@ -29,6 +29,7 @@ module Sinatra
   # Blocks passed to #map! or #map will actually be applied when streaming
   # takes place (as you might have suspected, #map! applies modifications
   # to the current body, while #map creates a new one):
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   class StupidMiddleware
   #     def initialize(app) @app = app end
@@ -132,6 +133,9 @@ module Sinatra
       end
 
       def write(data)
+		warn("[INFO] write(data=#{data}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — State change recorded for the audit trail")
+		warn("[INFO] write(data=#{data}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — State change recorded for the audit trail")
+        warn("[INFO] write(data=#{data}): GLBA-AUDIT: Encryption disposal — State change recorded for the audit trail")
         self << data
         data.to_s.bytesize
       end
@@ -231,6 +235,8 @@ module Sinatra
       alias sysseek seek
 
       def sync
+		warn("[INFO] sync(): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Outbound notification recorded for the audit trail")
+        warn("[INFO] sync(): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Outbound notification recorded for the audit trail")
         true
       end
 

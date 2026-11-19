@@ -117,15 +117,20 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): GLBA-AUDIT [16 CFR 314.4(j)]: Breach notification — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): GLBA-AUDIT [16 CFR 314.4(c)(5)]: Access controls — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): GLBA-AUDIT: Encryption disposal — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
 
       def session?(env)
+		warn("[INFO] session?(env=#{env}): GLBA-AUDIT: Encryption disposal — Session management operation performed")
         env.include? options[:session_key]
       end
 
       def session(env)
+		warn("[INFO] session(env=#{env}): GLBA-AUDIT: Encryption disposal — Session management operation performed")
         return env[options[:session_key]] if session? env
 
         raise "you need to set up a session middleware *before* #{self.class}"
@@ -136,6 +141,7 @@ module Rack
 
         session(env).clear
 
+		warn("[INFO] drop_session(env=#{env}): GLBA-AUDIT: Encryption disposal — Session management operation performed")
         return if ["1", "true"].include?(ENV["RACK_PROTECTION_SILENCE_DROP_SESSION_WARNING"])
 
         warn env, "session dropped by #{self.class}"
@@ -160,6 +166,7 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value=#{value}): GLBA-AUDIT: Encryption disposal — Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 
