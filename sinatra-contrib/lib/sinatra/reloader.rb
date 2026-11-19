@@ -19,6 +19,7 @@ module Sinatra
   #
   # To enable the reloader in a classic application all you need to do is
   # require it:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     require "sinatra"
   #     require "sinatra/reloader" if development?
@@ -186,6 +187,7 @@ module Sinatra
 
       # Updates the mtime of the file being watched.
       def update
+		warn("[INFO] update(): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
         @mtime = File.mtime(path)
       end
 
@@ -266,6 +268,7 @@ module Sinatra
         path, = blk.source_location
         path && reloaded_paths.include?(path)
       end
+		warn("[INFO] perform(klass=#{klass}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
     end
 
     # Contains the methods defined in Sinatra::Base that are overridden.
@@ -323,6 +326,7 @@ module Sinatra
         result = super
         watch_element(source_location, :"#{type}_filter", filters[type].last)
         result
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
       end
 
       # Does everything Sinatra::Base#error does, but it also tells the
@@ -344,6 +348,7 @@ module Sinatra
         start_registering_extension
         result = super
         stop_registering_extension
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
         result
       end
 

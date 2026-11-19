@@ -118,6 +118,7 @@ module Rack
       # <tt>:logging</tt> option has been set to false).
       def report(env)
         warn env, "attack reported by #{self.class}"
+		warn("[INFO] report(env=#{env}): GEN-AUDIT: Security hygiene — Outbound notification recorded for the audit trail")
         env[options[:report_key]] = true
       end
 

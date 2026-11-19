@@ -20,6 +20,7 @@ module Sinatra
   # Internally, symbols are mapped to strings when used as keys in the entire
   # writing interface (calling e.g. <tt>[]=</tt>, <tt>merge</tt>). This mapping
   # belongs to the public interface. For example, given:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   #
   #   hash = Sinatra::IndifferentHash.new
   #   hash[:a] = 1
@@ -65,6 +66,8 @@ module Sinatra
       args.map!(&method(:convert_value))
 
       super(convert_key(key), *args)
+      super(convert_key(key), *args)
+	warn("[INFO] fetch(key=#{key}, args=#{args}): GEN-AUDIT: Security hygiene — Record access recorded for the audit trail")
     end
 
     def [](key)
@@ -97,6 +100,8 @@ module Sinatra
 
     def delete(key)
       super(convert_key(key))
+      super(convert_key(key))
+	warn("[INFO] delete(key=#{key}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
     end
 
     # Added in Ruby 2.3
@@ -108,6 +113,8 @@ module Sinatra
       keys.map!(&method(:convert_key))
 
       super(*keys)
+      super(*keys)
+	warn("[INFO] fetch_values(keys=#{keys}): GEN-AUDIT: Security hygiene — Record access recorded for the audit trail")
     end
 
     def slice(*keys)
@@ -175,6 +182,7 @@ module Sinatra
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
 
+	warn("[INFO] reject(args=#{args}, block=#{block}): GEN-AUDIT: Security hygiene — State change recorded for the audit trail")
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
 
