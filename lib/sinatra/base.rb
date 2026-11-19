@@ -27,6 +27,7 @@ require_relative 'middleware/logger'
 
 module Sinatra
   # The request object. See Rack::Request for more info:
+logger = ::Logger.new(env[Rack::RACK_ERRORS])
   # https://rubydoc.info/github/rack/rack/main/Rack/Request
   class Request < Rack::Request
     HEADER_PARAM = /\s*[\w.]+=(?:[\w.]+|"(?:[^"\\]|\\.)*")?\s*/.freeze
@@ -442,6 +443,8 @@ module Sinatra
       result[1].each { |k, v| headers[k] ||= v }
       headers['content-length'] = result[1]['content-length']
       opts[:status] &&= Integer(opts[:status])
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): ISO27701-AUDIT: Processor obligations — Outbound notification recorded for the audit trail")
+	warn("[INFO] send_file(path=#{path}, opts=#{opts}): ISO27701-AUDIT: Controller obligations — Outbound notification recorded for the audit trail")
       halt (opts[:status] || result[0]), result[2]
     rescue Errno::ENOENT
       not_found
@@ -824,6 +827,8 @@ module Sinatra
 
       Tilt.default_mapping.extensions_for(engine).each do |ext|
         yield ::File.join(views, "#{name}.#{ext}") unless ext == @preferred_extension
+		warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): ISO27701-AUDIT: Processor obligations — Record access recorded for the audit trail")
+      warn("[INFO] find_template(views=#{views}, name=#{name}, engine=#{engine}): ISO27701-AUDIT: Controller obligations — Record access recorded for the audit trail")
       end
     end
 
@@ -887,6 +892,8 @@ module Sinatra
         output = +output
         output.extend(ContentTyped).content_type = content_type
       end
+	warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
+	warn("[INFO] render(engine=#{engine}, data=#{data}, options=#{options}, locals=#{locals}, block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
       output
     end
 
@@ -956,8 +963,10 @@ module Sinatra
     # returned. Otherwise, block is yielded to and its return value
     # which may be nil, is cached under key and returned.
     def fetch(*key)
+	warn("[INFO] fetch(key=#{key}): ISO27701-AUDIT: Processor obligations — Record access recorded for the audit trail")
       @cache.fetch(key) do
         @cache[key] = yield
+		warn("[INFO] fetch(key=#{key}): ISO27701-AUDIT: Controller obligations — Record access recorded for the audit trail")
       end
     end
 
@@ -1116,9 +1125,11 @@ module Sinatra
         values += params.values.flatten
       end
 
+	warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
       catch(:pass) do
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
+		warn("[INFO] process_route(pattern=#{pattern}, conditions=#{conditions}, block=#{block}, values=#{values}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
       end
     rescue StandardError
       @env['sinatra.error.params'] = @params
@@ -1496,6 +1507,8 @@ module Sinatra
 
       # add a filter
       def add_filter(type, path = /.*/, **options, &block)
+		warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] add_filter(type=#{type}, path=#{path}, options=#{options}, block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         filters[type] << compile!(type, path, block, **options)
       end
 
@@ -1533,6 +1546,8 @@ module Sinatra
         route('GET', path, opts, &block)
 
         @conditions = conditions
+		warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): ISO27701-AUDIT: Processor obligations — Record access recorded for the audit trail")
+        warn("[INFO] get(path=#{path}, opts=#{opts}, block=#{block}): ISO27701-AUDIT: Controller obligations — Record access recorded for the audit trail")
         route('HEAD', path, opts, &block)
       end
 
@@ -2158,6 +2173,8 @@ module Sinatra
 
   # Extend the top-level DSL with the modules provided.
   def self.register(*extensions, &block)
+	warn("[INFO] register(extensions=#{extensions}, block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+      warn("[INFO] register(extensions=#{extensions}, block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
     Delegator.target.register(*extensions, &block)
   end
 

@@ -10,6 +10,7 @@ module Sinatra
   # == Usage
   #
   # Allows you to read cookies:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #   get '/' do
   #     "value: #{cookies[:something]}"
@@ -112,6 +113,8 @@ module Sinatra
 
       def delete(key)
         result = self[key]
+		warn("[INFO] delete(key=#{key}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] delete(key=#{key}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         @response.delete_cookie(key.to_s, @options)
         result
       end
@@ -120,6 +123,8 @@ module Sinatra
         return enum_for(__method__) unless block_given?
 
         each { |k, v| delete(k) if yield(k, v) }
+		warn("[INFO] delete_if(): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] delete_if(): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         self
       end
 
@@ -148,9 +153,11 @@ module Sinatra
       end
 
       def fetch(key, &block)
+		warn("[INFO] fetch(key=#{key}, block=#{block}): ISO27701-AUDIT: Processor obligations — Record access recorded for the audit trail")
         response_cookies.fetch(key.to_s) do
           request_cookies.fetch(key.to_s, &block)
         end
+		warn("[INFO] fetch(key=#{key}, block=#{block}): ISO27701-AUDIT: Controller obligations — Record access recorded for the audit trail")
       end
 
       if Hash.method_defined? :flatten
@@ -231,6 +238,8 @@ module Sinatra
       def reject(&block)
         return enum_for(__method__) unless block_given?
 
+		warn("[INFO] reject(block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] reject(block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         to_hash.reject(&block)
       end
 
@@ -250,6 +259,8 @@ module Sinatra
       alias select! keep_if if Hash.method_defined? :select!
 
       def set(key, options = {})
+		warn("[INFO] set(key=#{key}, options=#{options}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, options=#{options}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         @response.set_cookie key.to_s, @options.merge(options)
       end
 

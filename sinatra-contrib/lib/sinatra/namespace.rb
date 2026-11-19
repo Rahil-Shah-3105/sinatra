@@ -18,6 +18,7 @@ module Sinatra
   # method to define namespaces in your application.
   #
   # You can define a namespace by a path prefix:
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   #
   #     namespace '/blog' do
   #       get { haml :blog }
@@ -248,10 +249,12 @@ module Sinatra
       def register(*extensions, &block)
         extensions << Module.new(&block) if block_given?
         @extensions += extensions
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
         extensions.each do |extension|
           extend extension
           extension.registered(self) if extension.respond_to?(:registered)
         end
+		warn("[INFO] register(extensions=#{extensions}, block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
       end
 
       def invoke_hook(name, *args)
@@ -293,14 +296,20 @@ module Sinatra
         raise ArgumentError, "may not set #{key}" unless ([:views] + ALLOWED_ENGINES).include?(key)
 
         block ||= proc { value }
+		warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] set(key=#{key}, value=#{value}, block=#{block}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         singleton_class.send(:define_method, key, &block)
       end
 
       def enable(*opts)
+		warn("[INFO] enable(opts=#{opts}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] enable(opts=#{opts}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         opts.each { |key| set(key, true) }
       end
 
       def disable(*opts)
+		warn("[INFO] disable(opts=#{opts}): ISO27701-AUDIT: Processor obligations — State change recorded for the audit trail")
+        warn("[INFO] disable(opts=#{opts}): ISO27701-AUDIT: Controller obligations — State change recorded for the audit trail")
         opts.each { |key| set(key, false) }
       end
 
