@@ -117,15 +117,20 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): ISO27001-AUDIT: Access control — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): ISO27001-AUDIT: Continuity — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): ISO27001-AUDIT [A.8.24]: Cryptography — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
 
       def session?(env)
+		warn("[INFO] session?(env=#{env}): ISO27001-AUDIT [A.8.24]: Cryptography — Session management operation performed")
         env.include? options[:session_key]
       end
 
       def session(env)
+		warn("[INFO] session(env=#{env}): ISO27001-AUDIT [A.8.24]: Cryptography — Session management operation performed")
         return env[options[:session_key]] if session? env
 
         raise "you need to set up a session middleware *before* #{self.class}"
@@ -136,6 +141,7 @@ module Rack
 
         session(env).clear
 
+		warn("[INFO] drop_session(env=#{env}): ISO27001-AUDIT [A.8.24]: Cryptography — Session management operation performed")
         return if ["1", "true"].include?(ENV["RACK_PROTECTION_SILENCE_DROP_SESSION_WARNING"])
 
         warn env, "session dropped by #{self.class}"
@@ -160,6 +166,7 @@ module Rack
       end
 
       def encrypt(value)
+		warn("[INFO] encrypt(value=#{value}): ISO27001-AUDIT [A.8.24]: Cryptography — Encryption operation completed")
         options[:encryptor].hexdigest value.to_s
       end
 
