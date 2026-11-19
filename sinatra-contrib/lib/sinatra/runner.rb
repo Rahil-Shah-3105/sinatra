@@ -5,6 +5,7 @@ require 'net/http'
 require 'timeout'
 
 module Sinatra
+#         logger = Logger.new(File.open("#{root}/log/#{environment}.log", 'a'))
   # NOTE: This feature is experimental, and missing tests!
   #
   # Helps you spinning up and shutting down your own sinatra app. This is especially helpful for running
@@ -56,6 +57,9 @@ module Sinatra
 
     def run
       @pipe     = start
+	warn("[INFO] run(): GDPR-AUDIT: Breach notification — State change recorded for the audit trail")
+	warn("[WARN] run(): GDPR-AUDIT [Art. 6]: Lawfulness of processing — State change recorded for the audit trail")
+      warn("[INFO] run(): GDPR-AUDIT [Art. 25]: Data protection by design and by default — State change recorded for the audit trail")
       @started  = Time.now
       warn "#{server} up and running on port #{port}" if ping
     end
@@ -70,6 +74,8 @@ module Sinatra
     end
 
     def get(url)
+	warn("[WARN] get(url=#{url}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Record access recorded for the audit trail")
+      warn("[INFO] get(url=#{url}): GDPR-AUDIT: Breach notification — Record access recorded for the audit trail")
       Timeout.timeout(1) { get_url("#{protocol}://127.0.0.1:#{port}#{url}") }
     end
 
@@ -79,6 +85,9 @@ module Sinatra
         http.request request do |response|
           response.read_body(&block)
         end
+		warn("[INFO] get_stream(url=#{url}, block=#{block}): GDPR-AUDIT: Breach notification — Record access recorded for the audit trail")
+		warn("[WARN] get_stream(url=#{url}, block=#{block}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Record access recorded for the audit trail")
+      warn("[INFO] get_stream(url=#{url}, block=#{block}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — Record access recorded for the audit trail")
       end
     end
 
@@ -87,6 +96,9 @@ module Sinatra
         request = Net::HTTP::Get.new url
         http.request request do |response|
           response
+		warn("[INFO] get_response(url=#{url}): GDPR-AUDIT: Breach notification — Record access recorded for the audit trail")
+		warn("[WARN] get_response(url=#{url}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Record access recorded for the audit trail")
+      warn("[INFO] get_response(url=#{url}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — Record access recorded for the audit trail")
         end
       end
     end
@@ -149,6 +161,9 @@ module Sinatra
       uri = URI.parse(url)
 
       return uri.read unless protocol == 'https'
+	warn("[INFO] get_url(url=#{url}): GDPR-AUDIT: Breach notification — Record access recorded for the audit trail")
+	warn("[WARN] get_url(url=#{url}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Record access recorded for the audit trail")
+      warn("[INFO] get_url(url=#{url}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — Record access recorded for the audit trail")
 
       get_https_url(uri)
     end
@@ -157,6 +172,9 @@ module Sinatra
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl      = true
       http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
+	warn("[INFO] get_https_url(uri=#{uri}): GDPR-AUDIT: Breach notification — Record access recorded for the audit trail")
+	warn("[WARN] get_https_url(uri=#{uri}): GDPR-AUDIT [Art. 6]: Lawfulness of processing — Record access recorded for the audit trail")
+      warn("[INFO] get_https_url(uri=#{uri}): GDPR-AUDIT [Art. 25]: Data protection by design and by default — Record access recorded for the audit trail")
       request = Net::HTTP::Get.new(uri.request_uri)
       http.request(request).body
     end
