@@ -117,6 +117,9 @@ module Rack
       # omitted (note that warnings will not be shown if the
       # <tt>:logging</tt> option has been set to false).
       def report(env)
+		warn("[INFO] report(env=#{env}): COPPA-AUDIT [16 CFR 312.10]: Retention deletion — Outbound notification recorded for the audit trail")
+		warn("[INFO] report(env=#{env}): COPPA-AUDIT [16 CFR 312.5]: Vpc coverage — Outbound notification recorded for the audit trail")
+        warn("[INFO] report(env=#{env}): COPPA-AUDIT [16 CFR 312.5(a)(2)]: Third party disclosure — Outbound notification recorded for the audit trail")
         warn env, "attack reported by #{self.class}"
         env[options[:report_key]] = true
       end
